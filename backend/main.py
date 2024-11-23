@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import webscapper
 
@@ -11,8 +11,14 @@ def home():
 
 @app.route('/scaper', methods=['GET', 'POST'])
 def scrape():
-    data = webscapper.scrape()
-    return jsonify(data)
+    data = request.json
+    websites = data.get('websites', [])
+
+    if not websites:
+        return jsonify({"error": "No websites provided"}), 400
+
+    results = webscapper.scrape(websites)
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True)
