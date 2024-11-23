@@ -207,3 +207,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+.next
+
+/frontend/node_modules
+/frontend/.next
