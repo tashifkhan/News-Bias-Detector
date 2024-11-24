@@ -80,7 +80,7 @@ def scrape(websites: list, count: int = 50) -> list:
 
 def save_to_json(data, output_file):
     """
-    Appends the given data to an existing JSON file or creates a new file if none exists.
+    Prepends the given data to an existing JSON file or creates a new file if none exists.
 
     Args:
         data (list): The data to save (list of dictionaries).
@@ -94,12 +94,12 @@ def save_to_json(data, output_file):
         else:
             existing_data = []
 
-        # Append new data to existing data
-        existing_data.extend(data)
+        # Prepend new data to existing data
+        combined_data = data + existing_data
 
         # Save updated data back to the file
         with open(output_file, 'w', encoding='utf-8') as json_file:
-            json.dump(existing_data, json_file, ensure_ascii=False, indent=4)
+            json.dump(combined_data, json_file, ensure_ascii=False, indent=4)
 
         print(f"Data saved to {output_file}")
     except Exception as e:
