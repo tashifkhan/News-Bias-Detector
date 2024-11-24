@@ -8,7 +8,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import newsArticles from "./newsArticles";
+import { getCachedData } from "@/hooks/hookNewsArticles";
 
 const ITEMS_PER_PAGE = 9;
 const LOADING_DELAY = 550;
@@ -59,6 +59,7 @@ const Home = () => {
 		keywords: string[];
 		tags: any[];
 		bias?: string;
+		thumbnail?: string;
 	}
 
 	const getBiasColor = (bias: string): string => {
@@ -72,15 +73,16 @@ const Home = () => {
 		}
 	};
 
-	const loadMoreArticles = useCallback(() => {
+	const loadMoreArticles = useCallback(async () => {
 		setLoading(true);
 
-		setTimeout(() => {
+		setTimeout(async () => {
 			const startIndex = (page - 1) * ITEMS_PER_PAGE;
 			const endIndex = startIndex + ITEMS_PER_PAGE;
-			const newArticles = newsArticles
+			const loadddd = await getCachedData();
+			const newArticles = loadddd
 				.slice(startIndex, endIndex)
-				.map((article) => ({
+				.map((article: NewsArticle) => ({
 					...article,
 					bias: article.bias || (randomInt(0, 1) === 0 ? "left" : "right"),
 				}));
@@ -90,7 +92,7 @@ const Home = () => {
 				setPage((prev) => prev + 1);
 			}
 
-			if (endIndex >= newsArticles.length) {
+			if (endIndex >= loadddd.length) {
 				setHasMore(false);
 			}
 
@@ -169,6 +171,15 @@ const Home = () => {
 								className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
 								onClick={() => handleArticleClick(article, bias)}
 							>
+								{article.thumbnail && (
+									<div className="w-full h-48 relative">
+										<img
+											src={article.thumbnail}
+											alt={article.title}
+											className="w-full h-full object-cover"
+										/>
+									</div>
+								)}
 								<CardHeader>
 									<div className="flex justify-between items-start">
 										<CardTitle className="text-lg font-semibold">
