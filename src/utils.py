@@ -3,6 +3,7 @@ import sys
 from src.exception import CustomException
 import pickle
 import re 
+import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.base import BaseEstimator, TransformerMixin

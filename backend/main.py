@@ -1,4 +1,6 @@
 from flask import Flask, jsonify, request
+import pandas as pd
+from src.pipeline.predict_pipeline import PredictPipeline
 from flask_cors import CORS
 import webscapper
 import json
@@ -44,6 +46,17 @@ def cache():
         return jsonify({"error": "No cached data found. Please scrape first."}), 404
     except Exception as e:
         return jsonify({"error": f"Failed to read cached data: {e}"}), 500
+
+@app.route('/predict',method=['POST'])
+def bias():
+    try:
+        data = request.json
+        pred = pd.read_json(data)
+        predict_pipeline = PredictPipeline()
+        result = predict_pipeline.predict(pred)
+        return result
+    except Exception as e:
+        return jsonify({"error": f"Failed to predict: {e}"}),500
 
 if __name__ == '__main__':
     app.run(debug=True)
