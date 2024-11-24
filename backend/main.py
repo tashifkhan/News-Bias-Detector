@@ -4,6 +4,8 @@ from src.pipeline.predict_pipeline import PredictPipeline
 from flask_cors import CORS
 import webscapper
 import json
+import nltk
+nltk.download('wordnet')
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -51,14 +53,14 @@ def cache():
 def bias():
     try:
         data = request.json
-        pred = pd.read_json(data)
-        pred['text'] = pred['title'] + pred['text'] + pred['keywords'] + pred['tags']
-        pred = pred[['text']]
+        pred = pd.DataFrame([data])
+        pred['text'] = pred['title'] + pred['text']
         predict_pipeline = PredictPipeline()
-        result = predict_pipeline.predict(pred)
-        return result
+        result = predict_pipeline.predict(pred[['text']])
+        return jsonify({"bias": result.tolist()})
     except Exception as e:
         return jsonify({"error": f"Failed to predict: {e}"}),500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
