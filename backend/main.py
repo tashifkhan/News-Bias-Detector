@@ -52,6 +52,8 @@ def bias():
     try:
         data = request.json
         pred = pd.read_json(data)
+        pred['text'] = pred['title'] + pred['text'] + pred['keywords'] + pred['tags']
+        pred = pred[['text']]
         predict_pipeline = PredictPipeline()
         result = predict_pipeline.predict(pred)
         return result
