@@ -1,18 +1,37 @@
+import os
+import shutil
 import nltk
 from newspaper import Article
 from datetime import datetime
 import newspaper
 import json
 
+# Ensure necessary resources are downloaded
 nltk.download('punkt')
-nltk.download('punkt_tab')
 
-def scrape(websites: list, count: int = 50) -> dict:
+# Path to the cache folder
+CACHE_FOLDER = os.path.expanduser("~/.newspaper_scraper")
+
+def clear_cache():
     """
-    Scrapes articles from a list of websites and extracts metadata and content.
+    Clears the newspaper cache folder to force fresh scraping of all articles.
+    """
+    if os.path.exists(CACHE_FOLDER):
+        try:
+            shutil.rmtree(CACHE_FOLDER)  # Delete the cache folder
+            print("Cache cleared successfully.")
+        except Exception as e:
+            print(f"Failed to clear cache: {e}")
+    else:
+        print("No cache to clear.")
+
+def scrape(websites: list, count: int = 50) -> list:
+    """
+    Scrapes articles from a list of websites and extracts metadata, including thumbnails.
 
     Args:
         websites (list): A list of website URLs to scrape.
+        count (int): Maximum number of articles to fetch per website.
 
     Returns:
         list: A list of dictionaries, each containing metadata and content for an article.
@@ -23,7 +42,7 @@ def scrape(websites: list, count: int = 50) -> dict:
     for website in websites:
         temp = count
         try:
-            site = newspaper.build(website, language='en', memorize=False)
+            site = newspaper.build(website, language='en', memorize=False)  # Disable cache
             print(f"Links from {website} = {len(site.articles)}")
 
             for article in site.articles:
@@ -41,7 +60,8 @@ def scrape(websites: list, count: int = 50) -> dict:
                         "author": article.authors,
                         "publish_date": article.publish_date.strftime('%Y-%m-%d') if article.publish_date else None,
                         "keywords": article.keywords,
-                        "tags": list(article.tags)
+                        "tags": list(article.tags),
+                        "thumbnail": article.top_image  # Get the top image (thumbnail)
                     })
                     temp -= 1
 
@@ -57,23 +77,39 @@ def scrape(websites: list, count: int = 50) -> dict:
     print(f"Total Articles - {len(articles_data)}")
     return articles_data
 
+
 def save_to_json(data, output_file):
     """
-    Saves the given data to a JSON file.
+    Appends the given data to an existing JSON file or creates a new file if none exists.
 
     Args:
         data (list): The data to save (list of dictionaries).
         output_file (str): The filename to save the data into.
     """
     try:
+        # Load existing data if the file exists
+        if os.path.exists(output_file):
+            with open(output_file, 'r', encoding='utf-8') as json_file:
+                existing_data = json.load(json_file)
+        else:
+            existing_data = []
+
+        # Append new data to existing data
+        existing_data.extend(data)
+
+        # Save updated data back to the file
         with open(output_file, 'w', encoding='utf-8') as json_file:
-            json.dump(data, json_file, ensure_ascii=False, indent=4)
+            json.dump(existing_data, json_file, ensure_ascii=False, indent=4)
+
         print(f"Data saved to {output_file}")
     except Exception as e:
         print(f"Failed to save data to JSON. Error: {e}")
 
 
 def main():
+    # Clear cache before scraping
+    clear_cache()
+
     websites = [
         "https://www.ndtv.com/",
         "https://www.thequint.com/",
@@ -83,10 +119,10 @@ def main():
         "https://www.republicworld.com/",
     ]
 
-    results = scrape(websites, 60000)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    save_to_json(results, f"scraped_articles_{timestamp}.json")
-    print(results)
+    results = scrape(websites, count=50)
+    output_file = "news_articles.json"
+    save_to_json(results, output_file)
+
 
 if __name__ == "__main__":
     main()
