@@ -178,7 +178,7 @@ const Home = () => {
 							}}
 							className={`px-4 py-2 rounded-lg font-medium ${
 								activeTab === tab
-									? "bg-blue-500 text-white"
+									? "bg-blue-800 text-white"
 									: "bg-white text-gray-600 hover:bg-gray-100"
 							}`}
 						>
@@ -207,7 +207,7 @@ const Home = () => {
 							<CardHeader>
 								<div className="flex justify-between items-start">
 									<CardTitle className="text-lg font-semibold">
-										<span className="text-blue-600 hover:underline">
+										<span className="text-blue-900 hover:underline">
 											{article.title}
 										</span>
 									</CardTitle>
@@ -245,15 +245,15 @@ const Home = () => {
 					{loading && (
 						<div className="flex items-center space-x-2">
 							<div
-								className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+								className="w-2 h-2 bg-blue-900 rounded-full animate-bounce"
 								style={{ animationDelay: "0ms" }}
 							></div>
 							<div
-								className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+								className="w-2 h-2 bg-blue-900 rounded-full animate-bounce"
 								style={{ animationDelay: "150ms" }}
 							></div>
 							<div
-								className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+								className="w-2 h-2 bg-blue-900 rounded-full animate-bounce"
 								style={{ animationDelay: "300ms" }}
 							></div>
 						</div>
