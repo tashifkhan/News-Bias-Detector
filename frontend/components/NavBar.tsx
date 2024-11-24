@@ -13,7 +13,7 @@ const Navbar = () => {
 	const navigationItems = [
 		{ name: "Home", href: "/" },
 		{ name: "Categories", href: "/categories" },
-		{ name: "Donations", href: "/domations" },
+		{ name: "Donations", href: "/donations" },
 		{ name: "About Us", href: "/about" },
 		{ name: "Contant Us", href: "/contact" },
 	];
@@ -43,7 +43,7 @@ const Navbar = () => {
 			<button
 				onClick={handleDatabaseRefresh}
 				disabled={isRefreshing}
-				className={`flex items-center px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 ${
+				className={`flex items-center px-4 py-2 rounded-md bg-blue-900 text-white hover:bg-blue-600 transition-colors duration-200 ${
 					isRefreshing ? "opacity-75 cursor-not-allowed" : ""
 				}`}
 			>
@@ -79,7 +79,7 @@ const Navbar = () => {
 									href={item.href}
 									className={`px-3 py-2 rounded-md transition-colors duration-200 ${
 										pathname === item.href
-											? "bg-blue-50 text-blue-600"
+											? "bg-blue-50 text-blue-900"
 											: "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
 									}`}
 								>
