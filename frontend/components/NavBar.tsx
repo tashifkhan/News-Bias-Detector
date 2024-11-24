@@ -1,11 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, RefreshCw } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { getNewsArticles } from "@/hooks/hookNewsArticles";
 
 const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isRefreshing, setIsRefreshing] = useState(false);
 	const pathname = usePathname();
 
 	const navigationItems = [
@@ -15,6 +17,22 @@ const Navbar = () => {
 		{ name: "About Us", href: "/about" },
 		{ name: "Contant Us", href: "/contact" },
 	];
+
+	const handleDatabaseRefresh = async () => {
+		try {
+			setIsRefreshing(true);
+			await getNewsArticles();
+
+			// const data = await response.json();
+			// console.log("Database refresh successful:", data);
+			// You might want to add a toast notification here
+		} catch (error) {
+			console.error("Error refreshing database:", error);
+			// You might want to add an error toast notification here
+		} finally {
+			setIsRefreshing(false);
+		}
+	};
 
 	return (
 		<>
@@ -50,7 +68,7 @@ const Navbar = () => {
 							))}
 						</div>
 
-						<div className="flex items-center">
+						<div className="flex items-center space-x-4">
 							<div className="relative">
 								<input
 									type="text"
@@ -62,6 +80,21 @@ const Navbar = () => {
 									size={20}
 								/>
 							</div>
+
+							<button
+								onClick={handleDatabaseRefresh}
+								disabled={isRefreshing}
+								className={`flex items-center px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 ${
+									isRefreshing ? "opacity-75 cursor-not-allowed" : ""
+								}`}
+							>
+								<RefreshCw
+									className={`w-4 h-4 mr-2 ${
+										isRefreshing ? "animate-spin" : ""
+									}`}
+								/>
+								{isRefreshing ? "Refreshing..." : "Refresh DB"}
+							</button>
 						</div>
 					</div>
 				</div>
@@ -84,6 +117,18 @@ const Navbar = () => {
 								{item.name}
 							</Link>
 						))}
+						<button
+							onClick={handleDatabaseRefresh}
+							disabled={isRefreshing}
+							className={`w-full flex items-center justify-center px-3 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 ${
+								isRefreshing ? "opacity-75 cursor-not-allowed" : ""
+							}`}
+						>
+							<RefreshCw
+								className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+							/>
+							{isRefreshing ? "Refreshing..." : "Refresh DB"}
+						</button>
 					</div>
 				</div>
 			)}

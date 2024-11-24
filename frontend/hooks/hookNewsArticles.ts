@@ -34,4 +34,4 @@ const getCachedData = async () => {
     return response.data;
 };
 
-export { getNewsArticles, getCachedData };
+export { getNewsArticles, getCachedData, backendUrl, payload, websites };
