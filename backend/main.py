@@ -4,8 +4,20 @@ from src.pipeline.predict_pipeline import PredictPipeline
 from flask_cors import CORS
 import webscapper
 import json
+from nltk.data import find
 import nltk
-nltk.download('wordnet')
+
+
+def ensure_nltk_resource(resource_name):
+    try:
+        find(resource_name)  # Check if the resource is already downloaded
+    except LookupError:
+        print(f"Downloading NLTK resource: {resource_name}")
+        nltk.download(resource_name)
+
+# Ensure required NLTK resources are available
+ensure_nltk_resource('punkt')
+ensure_nltk_resource('wordnet')
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})

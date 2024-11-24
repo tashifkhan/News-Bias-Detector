@@ -9,12 +9,10 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { getCachedData } from "@/hooks/hookNewsArticles";
+import axios from "axios";
 
 const ITEMS_PER_PAGE = 9;
 const LOADING_DELAY = 550;
-
-const randomInt = (min: number, max: number) =>
-	Math.floor(Math.random() * (max - min + 1)) + min;
 
 const ArticleSkeleton = () => (
 	<Card className="animate-pulse">
@@ -37,6 +35,34 @@ const ArticleSkeleton = () => (
 	</Card>
 );
 
+interface NewsArticle {
+	link: string;
+	title: string;
+	text: string;
+	author: string[];
+	publish_date: string | null;
+	keywords: string[];
+	tags: any[];
+	bias?: string;
+	thumbnail?: string;
+}
+
+const predictBias = async (article: {
+	title: string;
+	text: string;
+}): Promise<string> => {
+	try {
+		const { data } = await axios.post("http://127.0.0.1:5000/predict", {
+			title: article.title,
+			text: article.text,
+		});
+		return data.bias[0] === 0 ? "left" : "right";
+	} catch (error) {
+		console.error("Error predicting bias:", error);
+		return "unknown";
+	}
+};
+
 const Home = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState("trending");
@@ -49,18 +75,6 @@ const Home = () => {
 	);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const loader = useRef(null);
-
-	interface NewsArticle {
-		link: string;
-		title: string;
-		text: string;
-		author: string[];
-		publish_date: string | null;
-		keywords: string[];
-		tags: any[];
-		bias?: string;
-		thumbnail?: string;
-	}
 
 	const getBiasColor = (bias: string): string => {
 		switch (bias) {
@@ -77,26 +91,39 @@ const Home = () => {
 		setLoading(true);
 
 		setTimeout(async () => {
-			const startIndex = (page - 1) * ITEMS_PER_PAGE;
-			const endIndex = startIndex + ITEMS_PER_PAGE;
-			const loadddd = await getCachedData();
-			const newArticles = loadddd
-				.slice(startIndex, endIndex)
-				.map((article: NewsArticle) => ({
-					...article,
-					bias: article.bias || (randomInt(0, 1) === 0 ? "left" : "right"),
-				}));
+			try {
+				const startIndex = (page - 1) * ITEMS_PER_PAGE;
+				const endIndex = startIndex + ITEMS_PER_PAGE;
+				const loadedData = await getCachedData();
+				const articlesSlice = loadedData.slice(startIndex, endIndex);
 
-			if (newArticles.length > 0) {
-				setDisplayedArticles((prev) => [...prev, ...newArticles]);
-				setPage((prev) => prev + 1);
+				// Predict bias for each article
+				const articlesWithBias = await Promise.all(
+					articlesSlice.map(async (article: NewsArticle) => {
+						const predictedBias = await predictBias({
+							title: article.title,
+							text: article.text,
+						});
+						return {
+							...article,
+							bias: predictedBias,
+						};
+					})
+				);
+
+				if (articlesWithBias.length > 0) {
+					setDisplayedArticles((prev) => [...prev, ...articlesWithBias]);
+					setPage((prev) => prev + 1);
+				}
+
+				if (endIndex >= loadedData.length) {
+					setHasMore(false);
+				}
+			} catch (error) {
+				console.error("Error loading articles:", error);
+			} finally {
+				setLoading(false);
 			}
-
-			if (endIndex >= loadddd.length) {
-				setHasMore(false);
-			}
-
-			setLoading(false);
 		}, LOADING_DELAY);
 	}, [page]);
 
@@ -129,8 +156,8 @@ const Home = () => {
 		loadMoreArticles();
 	}, []);
 
-	const handleArticleClick = (article: NewsArticle, bias: string) => {
-		setSelectedArticle({ ...article, bias });
+	const handleArticleClick = (article: NewsArticle) => {
+		setSelectedArticle(article);
 		setIsDialogOpen(true);
 	};
 
@@ -162,60 +189,50 @@ const Home = () => {
 
 				{/* News Grid */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{displayedArticles.map((article: NewsArticle, index: number) => {
-						const bias: string = randomInt(0, 1) === 0 ? "left" : "right";
-
-						return (
-							<Card
-								key={`${article.title}-${index}`}
-								className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-								onClick={() => handleArticleClick(article, bias)}
-							>
-								{article.thumbnail && (
-									<div className="w-full h-48 relative">
-										<img
-											src={article.thumbnail}
-											alt={article.title}
-											className="w-full h-full object-cover"
-										/>
-									</div>
-								)}
-								<CardHeader>
-									<div className="flex justify-between items-start">
-										<CardTitle className="text-lg font-semibold">
-											<span className="text-blue-600 hover:underline">
-												{article.title}
-											</span>
-										</CardTitle>
-										<span
-											className={`px-2 py-1 rounded-full text-xs font-medium ${getBiasColor(
-												bias
-											)}`}
-										>
-											{bias.toUpperCase()}
+					{displayedArticles.map((article: NewsArticle, index: number) => (
+						<Card
+							key={`${article.title}-${index}`}
+							className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+							onClick={() => handleArticleClick(article)}
+						>
+							{article.thumbnail && (
+								<div className="w-full h-48 relative">
+									<img
+										src={article.thumbnail}
+										alt={article.title}
+										className="w-full h-full object-cover"
+									/>
+								</div>
+							)}
+							<CardHeader>
+								<div className="flex justify-between items-start">
+									<CardTitle className="text-lg font-semibold">
+										<span className="text-blue-600 hover:underline">
+											{article.title}
 										</span>
-									</div>
-								</CardHeader>
-								<CardContent>
-									<p className="text-gray-600 text-sm mb-4 line-clamp-3">
-										{article.text || "No description available."}
-									</p>
-									<div className="flex justify-between items-center text-sm text-gray-500">
-										<span>By {article.author?.join(", ") || "Unknown"}</span>
-									</div>
-								</CardContent>
-							</Card>
-						);
-					})}
+									</CardTitle>
+									<span
+										className={`px-2 py-1 rounded-full text-xs font-medium ${getBiasColor(
+											article.bias || "unknown"
+										)}`}
+									>
+										{(article.bias || "unknown").toUpperCase()}
+									</span>
+								</div>
+							</CardHeader>
+							<CardContent>
+								<p className="text-gray-600 text-sm mb-4 line-clamp-3">
+									{article.text || "No description available."}
+								</p>
+								<div className="flex justify-between items-center text-sm text-gray-500">
+									<span>By {article.author?.join(", ") || "Unknown"}</span>
+								</div>
+							</CardContent>
+						</Card>
+					))}
 
 					{loading && (
 						<>
-							<ArticleSkeleton />
-							<ArticleSkeleton />
-							<ArticleSkeleton />
-							<ArticleSkeleton />
-							<ArticleSkeleton />
-							<ArticleSkeleton />
 							<ArticleSkeleton />
 							<ArticleSkeleton />
 							<ArticleSkeleton />

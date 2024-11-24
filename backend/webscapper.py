@@ -1,5 +1,6 @@
 import os
 import shutil
+from nltk.data import find
 import nltk
 from newspaper import Article
 from datetime import datetime
@@ -7,7 +8,16 @@ import newspaper
 import json
 
 # Ensure necessary resources are downloaded
-nltk.download('punkt')
+
+def ensure_nltk_resource(resource_name):
+    try:
+        find(resource_name)  # Check if the resource is already downloaded
+    except LookupError:
+        print(f"Downloading NLTK resource: {resource_name}")
+        nltk.download(resource_name)
+
+# Ensure required NLTK resources are available
+ensure_nltk_resource('punkt')
 
 # Path to the cache folder
 CACHE_FOLDER = os.path.expanduser("~/.newspaper_scraper")
