@@ -47,7 +47,7 @@ def cache():
     except Exception as e:
         return jsonify({"error": f"Failed to read cached data: {e}"}), 500
 
-@app.route('/predict',method=['POST'])
+@app.route('/predict',methods=['POST'])
 def bias():
     try:
         data = request.json
