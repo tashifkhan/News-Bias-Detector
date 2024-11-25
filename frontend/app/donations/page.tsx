@@ -12,8 +12,17 @@ import {
 	BarChart,
 	QrCode,
 } from "lucide-react";
+import {
+	Dialog,
+	DialogContent,
+	DialogOverlay,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import QRImage from "@/public/DonationQR.png";
+import Image from "next/image";
 
 const DonationSection = () => {
+	const [showUPIDialog, setShowUPIDialog] = useState(false);
 	const [donationAmount, setDonationAmount] = useState("");
 	const [donationType, setDonationType] = useState("one-time");
 
@@ -174,10 +183,37 @@ const DonationSection = () => {
 											<DollarSign className="w-4 h-4 mr-2" />
 											Donate with Card
 										</Button>
-										<Button className="w-full bg-gray-800 hover:bg-gray-900 text-white">
+
+										<Button
+											className="w-full bg-gray-800 hover:bg-gray-900 text-white"
+											onClick={() => setShowUPIDialog(true)}
+										>
 											<QrCode className="w-4 h-4 mr-2" />
 											Pay with UPI
 										</Button>
+
+										<Dialog
+											open={showUPIDialog}
+											onOpenChange={() => setShowUPIDialog(false)}
+										>
+											<DialogOverlay />
+											<DialogContent>
+												<DialogTitle>Scan to Pay</DialogTitle>
+												<div className="text-center">
+													<Image
+														src={QRImage}
+														alt="UPI QR Code"
+														className="mx-auto mb-4"
+													/>
+													<Button
+														onClick={() => setShowUPIDialog(false)}
+														className="bg-blue-600 hover:bg-blue-700 text-white"
+													>
+														Close
+													</Button>
+												</div>
+											</DialogContent>
+										</Dialog>
 									</div>
 
 									{/* Security Note */}
