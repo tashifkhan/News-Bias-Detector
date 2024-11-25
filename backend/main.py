@@ -6,6 +6,8 @@ import webscapper
 import json
 from nltk.data import find
 import nltk
+from pymongo import MongoClient
+from bson.json_util import dumps
 
 
 def ensure_nltk_resource(resource_name):
@@ -18,6 +20,18 @@ def ensure_nltk_resource(resource_name):
 # Ensure required NLTK resources are available
 ensure_nltk_resource('punkt')
 ensure_nltk_resource('wordnet')
+
+# MongoDB setup
+client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB URI
+db = client['news_database']  # Database name
+collection = db['news_articles']  # Collection name
+
+# Create a unique index on title and text fields
+collection.create_index(
+    [("title", "text"), ("text", "text")],
+    name="unique_article_index",
+    unique=True
+)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -39,29 +53,38 @@ def scrape():
         return jsonify({"error": "No websites provided"}), 400
 
     results = webscapper.scrape(websites, count)
-    webscapper.save_to_json(results, "news_articles.json")
     
-    # Read the updated JSON file
-    try:
-        with open("news_articles.json", "r", encoding="utf-8") as file:
-            entire_data = json.load(file)
-        return jsonify(entire_data)
-    except Exception as e:
-        return jsonify({"error": f"Failed to read saved data: {e}"}), 500
+    added_count = 0
+    duplicate_count = 0
+    for result in results:
+        try:
+            # Insert each article only if it doesn't already exist
+            collection.insert_one(result)
+            added_count += 1
+        except Exception as e:
+            if "duplicate key error" in str(e):
+                duplicate_count += 1
+            else:
+                return jsonify({"error": f"Unexpected error: {e}"}), 500
+
+    return jsonify({
+        "message": "Scraping completed!",
+        "added_articles": added_count,
+        "duplicates_skipped": duplicate_count
+    })
 
 @app.route('/cache', methods=['GET'])
 def cache():
-    # Read the JSON file and return its content
     try:
-        with open("news_articles.json", "r", encoding="utf-8") as file:
-            entire_data = json.load(file)
-        return jsonify(entire_data)
-    except FileNotFoundError:
-        return jsonify({"error": "No cached data found. Please scrape first."}), 404
+        # Retrieve all documents from the MongoDB collection
+        entire_data = list(collection.find())
+        if not entire_data:
+            return jsonify({"error": "No cached data found. Please scrape first."}), 404
+        return jsonify(json.loads(dumps(entire_data)))
     except Exception as e:
-        return jsonify({"error": f"Failed to read cached data: {e}"}), 500
+        return jsonify({"error": f"Failed to retrieve cached data: {e}"}), 500
 
-@app.route('/predict',methods=['POST'])
+@app.route('/predict', methods=['POST'])
 def bias():
     try:
         data = request.json
@@ -71,8 +94,7 @@ def bias():
         result = predict_pipeline.predict(pred[['text']])
         return jsonify({"bias": result.tolist()})
     except Exception as e:
-        return jsonify({"error": f"Failed to predict: {e}"}),500
-
+        return jsonify({"error": f"Failed to predict: {e}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
