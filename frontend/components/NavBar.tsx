@@ -2,8 +2,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Search, RefreshCw } from "lucide-react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { getNewsArticles } from "@/hooks/hookNewsArticles";
+import icon from "@/app/icon.png";
 
 const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,9 +69,11 @@ const Navbar = () => {
 							>
 								{isMenuOpen ? <X size={24} /> : <Menu size={24} />}
 							</button>
-							<span className="ml-4 text-xl font-bold text-gray-800">
-								BiasDetector
-							</span>
+							<Link href="/">
+								<span className="ml-4 text-xl font-bold text-gray-800">
+									BiasDetector
+								</span>
+							</Link>
 						</div>
 
 						<div className="hidden md:flex items-center space-x-4">
@@ -94,6 +98,18 @@ const Navbar = () => {
 					</div>
 				</div>
 			</nav>
+
+			<div className="fixed bottom-2">
+				<Link href="/">
+					<Image
+						src={icon}
+						alt="BiasDetector"
+						width={120}
+						height={120}
+						className="inline-block"
+					/>
+				</Link>
+			</div>
 
 			{/* Mobile Menu */}
 			{isMenuOpen && (
