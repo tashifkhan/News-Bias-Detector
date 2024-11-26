@@ -59,7 +59,7 @@ const DonationSection = () => {
 							<CardContent>
 								<div className="space-y-6">
 									<div className="flex items-start space-x-3">
-										<Target className="w-5 h-5 text-blue-600 mt-1" />
+										<Target className="w-5 h-5 text-blue-800 mt-1" />
 										<div>
 											<h3 className="font-semibold">Mission Support</h3>
 											<p className="text-gray-600">
@@ -69,7 +69,7 @@ const DonationSection = () => {
 									</div>
 
 									<div className="flex items-start space-x-3">
-										<BarChart className="w-5 h-5 text-blue-600 mt-1" />
+										<BarChart className="w-5 h-5 text-blue-800 mt-1" />
 										<div>
 											<h3 className="font-semibold">Technology Investment</h3>
 											<p className="text-gray-600">
@@ -79,7 +79,7 @@ const DonationSection = () => {
 									</div>
 
 									<div className="flex items-start space-x-3">
-										<Shield className="w-5 h-5 text-blue-600 mt-1" />
+										<Shield className="w-5 h-5 text-blue-800 mt-1" />
 										<div>
 											<h3 className="font-semibold">Transparency</h3>
 											<p className="text-gray-600">
@@ -117,7 +117,7 @@ const DonationSection = () => {
 										<Button
 											className={`flex-1 ${
 												donationType === "one-time"
-													? "bg-blue-600 text-white"
+													? "bg-blue-800 text-white"
 													: "bg-gray-100 text-gray-600"
 											}`}
 											onClick={() => setDonationType("one-time")}
@@ -127,7 +127,7 @@ const DonationSection = () => {
 										<Button
 											className={`flex-1 ${
 												donationType === "monthly"
-													? "bg-blue-600 text-white"
+													? "bg-blue-800 text-white"
 													: "bg-gray-100 text-gray-600"
 											}`}
 											onClick={() => setDonationType("monthly")}
@@ -147,7 +147,7 @@ const DonationSection = () => {
 													key={amount}
 													className={`${
 														donationAmount === amount.toString()
-															? "bg-blue-600 text-white"
+															? "bg-blue-800 text-white"
 															: "bg-gray-100 text-gray-600"
 													}`}
 													onClick={() => handleAmountSelect(amount)}
@@ -179,7 +179,7 @@ const DonationSection = () => {
 
 									{/* Payment Buttons */}
 									<div className="space-y-4">
-										<Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+										<Button className="w-full bg-blue-800 hover:bg-blue-700 text-white">
 											<DollarSign className="w-4 h-4 mr-2" />
 											Donate with Card
 										</Button>
@@ -207,7 +207,7 @@ const DonationSection = () => {
 													/>
 													<Button
 														onClick={() => setShowUPIDialog(false)}
-														className="bg-blue-600 hover:bg-blue-700 text-white"
+														className="bg-blue-800 hover:bg-blue-700 text-white"
 													>
 														Close
 													</Button>

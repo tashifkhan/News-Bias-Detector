@@ -99,7 +99,7 @@ const Navbar = () => {
 				</div>
 			</nav>
 
-			<div className="fixed bottom-2">
+			<div className="fixed bottom-2 z-10">
 				<Link href="/">
 					<Image
 						src={icon}
