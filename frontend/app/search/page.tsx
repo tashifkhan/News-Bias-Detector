@@ -180,7 +180,7 @@ const SearchResultsPage: React.FC = () => {
 				)}
 
 				<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-					<DialogContent className="max-w-3xl">
+					<DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
 						{selectedResult && (
 							<>
 								<DialogHeader>
