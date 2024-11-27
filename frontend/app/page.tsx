@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Search, Menu, X, ChevronRight, ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Dialog,
@@ -35,7 +34,7 @@ const ArticleSkeleton = () => (
 	</Card>
 );
 
-interface NewsArticle {
+export interface NewsArticle {
 	link: string;
 	title: string;
 	text: string;
@@ -64,7 +63,6 @@ const predictBias = async (article: {
 };
 
 const Home = () => {
-	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState("trending");
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
