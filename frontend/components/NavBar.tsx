@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Search, RefreshCw } from "lucide-react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getNewsArticles } from "@/hooks/hookNewsArticles";
 import icon from "@/app/icon.png";
 
@@ -11,6 +11,7 @@ const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const pathname = usePathname();
+	const router = useRouter();
 
 	const navigationItems = [
 		{ name: "Home", href: "/" },
@@ -31,6 +32,24 @@ const Navbar = () => {
 			setIsRefreshing(false);
 		}
 	};
+	const handleSearch = async (searchText: string) => {
+		try {
+			const response = await fetch("http://127.0.0.1:5000/search", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ keyword: searchText }),
+			});
+
+			const results = await response.json();
+			window.location.href = `/search?keyword=${encodeURIComponent(
+				searchText
+			)}`;
+		} catch (error) {
+			console.error("Search failed:", error);
+		}
+	};
 
 	const SearchAndRefreshButtons = () => (
 		<>
@@ -39,11 +58,36 @@ const Navbar = () => {
 					type="text"
 					placeholder="Search articles..."
 					className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+					onKeyDown={async (e) => {
+						if (e.key === "Enter") {
+							const searchText = e.currentTarget.value;
+							if (!searchText) return;
+							handleSearch(searchText);
+						}
+					}}
 				/>
-				<Search className="absolute right-3 top-2.5 text-gray-400" size={20} />
+				<button
+					onClick={async () => {
+						const searchText = (
+							document.querySelector('input[type="text"]') as HTMLInputElement
+						)?.value;
+						if (!searchText) return;
+						handleSearch(searchText);
+					}}
+					className=""
+				>
+					<Search
+						className="absolute right-3 top-2.5 text-gray-400"
+						size={20}
+					/>
+				</button>
 			</div>
+
 			<button
-				onClick={handleDatabaseRefresh}
+				onClick={async () => {
+					await handleDatabaseRefresh();
+					window.location.reload();
+				}}
 				disabled={isRefreshing}
 				className={`flex items-center px-4 py-2 rounded-md bg-blue-900 text-white hover:bg-blue-600 transition-colors duration-200 ${
 					isRefreshing ? "opacity-75 cursor-not-allowed" : ""
@@ -99,7 +143,7 @@ const Navbar = () => {
 				</div>
 			</nav>
 
-			<div className="fixed bottom-2">
+			<div className="fixed bottom-2 z-10">
 				<Link href="/">
 					<Image
 						src={icon}

@@ -164,7 +164,16 @@ const ContactSection = () => {
 
 									<Button
 										type="submit"
-										className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+										className="w-full bg-blue-800 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+										onClick={(e) => {
+											e.preventDefault();
+											const mailtoLink = `mailto:hehe_the_new_gg@gmail.com?subject=${encodeURIComponent(
+												formData.subject
+											)}&body=${encodeURIComponent(
+												`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+											)}`;
+											window.open(mailtoLink);
+										}}
 									>
 										Send Message
 									</Button>
