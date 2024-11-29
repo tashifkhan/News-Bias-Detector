@@ -51,8 +51,8 @@ const Navbar = () => {
 		}
 	};
 
-	const SearchAndRefreshButtons = () => (
-		<>
+	const searchBar = () => {
+		return (
 			<div className="relative w-full md:w-64">
 				<input
 					type="text"
@@ -82,6 +82,12 @@ const Navbar = () => {
 					/>
 				</button>
 			</div>
+		);
+	};
+
+	const SearchAndRefreshButtons = () => (
+		<>
+			{searchBar()}
 
 			<button
 				onClick={async () => {
@@ -172,10 +178,11 @@ const Navbar = () => {
 								{item.name}
 							</Link>
 						))}
+						{searchBar()}
 						<button
 							onClick={handleDatabaseRefresh}
 							disabled={isRefreshing}
-							className={`w-full flex items-center justify-center px-3 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 ${
+							className={`w-full flex items-center justify-center my-6 px-3 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 ${
 								isRefreshing ? "opacity-75 cursor-not-allowed" : ""
 							}`}
 						>
