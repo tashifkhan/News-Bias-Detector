@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Search, RefreshCw } from "lucide-react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { getNewsArticles } from "@/hooks/hookNewsArticles";
 import icon from "@/app/icon.png";
 
@@ -11,7 +11,6 @@ const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const pathname = usePathname();
-	const router = useRouter();
 
 	const navigationItems = [
 		{ name: "Home", href: "/" },

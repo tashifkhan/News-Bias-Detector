@@ -85,6 +85,8 @@ const Home = () => {
 		}
 	};
 
+	// infinite scroll
+
 	const loadMoreArticles = useCallback(async () => {
 		setLoading(true);
 
@@ -149,6 +151,8 @@ const Home = () => {
 			}
 		};
 	}, [loadMoreArticles, hasMore, loading]);
+
+	// end scroll
 
 	useEffect(() => {
 		loadMoreArticles();

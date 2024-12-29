@@ -72,7 +72,7 @@ def scrape():
     collection.delete_many({'text': 'No description available.'})
     collection.delete_many({
         'title': {
-            '$regex': '(?i)(dell|hp|acer)'
+            '$regex': '(?i)(dell|hp|acer|lenovo)'
         }
     })
 
