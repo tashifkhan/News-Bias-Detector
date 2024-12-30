@@ -16,7 +16,7 @@ import dotenv
 dotenv.load_dotenv()
 
 def ensure_nltk_resource(resource_name):
-    nltk_data_dir = os.path.join(os.getcwd(), 'nltk_data')
+    nltk_data_dir = os.path.join(os.path.dirname(__file__), 'nltk_data')
     os.makedirs(nltk_data_dir, exist_ok=True)
     try:
         find(resource_name)  # Check if the resource is already downloaded
