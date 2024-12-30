@@ -118,7 +118,7 @@ const AboutUsPage = () => {
 				</Card>
 
 				{/* Call to Action */}
-				<Card className="bg-blue-50 shadow-lg">
+				<Card className="bg-blue-50 shadow-lg mb-20">
 					<CardContent className="p-6">
 						<h2 className="text-2xl font-bold mb-4 text-blue-900">
 							Join Us in Making a Difference
