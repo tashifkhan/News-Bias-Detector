@@ -27,6 +27,7 @@ def ensure_nltk_resource(resource_name):
 # Ensure required NLTK resources are available
 ensure_nltk_resource('punkt')
 ensure_nltk_resource('wordnet')
+ensure_nltk_resource('stopwords')
 
 # MongoDB setup
 client = MongoClient(os.getenv('MONGO_DB_URI'))

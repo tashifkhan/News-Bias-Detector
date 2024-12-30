@@ -20,6 +20,7 @@ def ensure_nltk_resource(resource_name):
 
 # Ensure required NLTK resources are available
 ensure_nltk_resource('punkt')
+ensure_nltk_resource('stopwords')
 
 # Path to the cache folder
 CACHE_FOLDER = os.path.expanduser("~/.newspaper_scraper")
