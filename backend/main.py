@@ -53,21 +53,24 @@ def scrape():
 
     added_count = 0
     duplicate_count = 0
-    for result in results:
-        try:
-            # Check if an article with the same title and text already exists
-            exists = collection.find_one({
-                "title": result['title'],
-                "text": result['text']
-            })
-            if ((not exists) and (not (result['title'] == '' or result['text'] == ''))):
-                collection.insert_one(result)
-                added_count += 1
-            else:
-                duplicate_count += 1
-        except Exception as e:
+    valid_results = [r for r in results if r['title'] and r['text']]
+    
+    try:
+        # Bulk insert with ordered=False for better performance
+        if valid_results:
+            result = collection.insert_many(
+                valid_results, 
+                ordered=False
+            )
+            added_count = len(result.inserted_ids)
+            duplicate_count = len(valid_results) - added_count
+    except Exception as e:
+        if 'duplicate key' in str(e):
+            # Count successful inserts if partial failure
+            added_count = len(getattr(e, 'details', {}).get('writeErrors', []))
+            duplicate_count = len(valid_results) - added_count
+        else:
             return jsonify({"error": f"Unexpected error: {e}"}), 500
-        
     collection.delete_many({'title': ''})
     collection.delete_many({'text': ''})
     collection.delete_many({'text': 'Get App for Better Experience'})
@@ -78,6 +81,14 @@ def scrape():
             '$regex': '(?i)(dell|hp|acer|lenovo)'
         }
     })
+
+    # Check total count and delete old entries if needed
+    total_count = collection.count_documents({})
+    if total_count > 1500:
+        oldest_docs = collection.find().sort("published_date", 1).limit(1000)
+        doc_ids = [doc['_id'] for doc in oldest_docs]
+        if doc_ids:
+            collection.delete_many({'_id': {'$in': doc_ids}})
 
     return jsonify({
         "message": "Scraping completed!",
@@ -130,6 +141,23 @@ def search():
         return jsonify(json.loads(dumps(articles)))
     except Exception as e:
         return jsonify({"error": f"Search failed: {e}"}), 500
+    
+@app.route('/delete', methods=['DELETE'])
+def delete():
+    try:
+        # Find the oldest 1000 documents sorted by published_date
+        oldest_docs = collection.find().sort("published_date", 1).limit(1000)
+        
+        # Get the _ids of documents to delete
+        doc_ids = [doc['_id'] for doc in oldest_docs]
+        
+        # Delete the documents
+        if doc_ids:
+            result = collection.delete_many({'_id': {'$in': doc_ids}})
+            return jsonify({"message": f"Deleted {result.deleted_count} documents"})
+        return jsonify({"message": "No documents to delete"})
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete documents: {e}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
