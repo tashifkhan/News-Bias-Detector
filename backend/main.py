@@ -9,7 +9,11 @@ import nltk
 from pymongo import MongoClient
 from bson.json_util import dumps
 import random
+import os
+import dotenv
 
+# Load environment variables
+dotenv.load_dotenv()
 
 def ensure_nltk_resource(resource_name):
     try:
@@ -23,7 +27,7 @@ ensure_nltk_resource('punkt')
 ensure_nltk_resource('wordnet')
 
 # MongoDB setup
-client = MongoClient("mongodb://localhost:27017/") 
+client = MongoClient(os.getenv('MONGO_DB_URI'))
 db = client['NewsBiasApp']
 collection = db['NewsArtciles']
 
@@ -130,4 +134,4 @@ def search():
         return jsonify({"error": f"Search failed: {e}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
