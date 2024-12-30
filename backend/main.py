@@ -8,7 +8,6 @@ from nltk.data import find
 import nltk
 from pymongo import MongoClient
 from bson.json_util import dumps
-import random
 import os
 import dotenv
 
@@ -89,9 +88,8 @@ def scrape():
 @app.route('/cache', methods=['GET', 'OPTIONS'])
 def cache():
     try:
-        # Retrieve all documents from the MongoDB collection
-        entire_data = list(collection.find())
-        random.shuffle(entire_data)
+        # Retrieve all documents from the MongoDB collection, sorted by published date
+        entire_data = list(collection.find().sort("published_date", -1))  # -1 for descending order
         if not entire_data:
             return jsonify({"error": "No cached data found. Please scrape first."}), 404
         return jsonify(json.loads(dumps(entire_data)))
