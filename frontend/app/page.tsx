@@ -112,12 +112,7 @@ const Home = () => {
 				);
 
 				if (articlesWithBias.length > 0) {
-					const filteredArticles = articlesWithBias.filter(
-						(article) =>
-							!article.link.includes("https://gadgetsnow.indiatimes.com/") &&
-							!article.link.includes("https://www.gadgets360.com/")
-					);
-					setDisplayedArticles((prev) => [...prev, ...filteredArticles]);
+					setDisplayedArticles((prev) => [...prev, ...articlesWithBias]);
 					setPage((prev) => prev + 1);
 				}
 

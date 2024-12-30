@@ -34,4 +34,10 @@ const getCachedData = async () => {
     return response.data;
 };
 
+const getCashedDataWithoutTech = async () => {
+    const response = await axios.get(
+        "http://127.0.0.1:5000/cache",
+    );
+}
+
 export { getNewsArticles, getCachedData, backendUrl, payload, websites };
