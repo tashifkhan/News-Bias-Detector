@@ -10,11 +10,13 @@ import json
 # Ensure necessary resources are downloaded
 
 def ensure_nltk_resource(resource_name):
+    nltk_data_dir = os.path.join(os.getcwd(), 'nltk_data')
+    os.makedirs(nltk_data_dir, exist_ok=True)
     try:
         find(resource_name)  # Check if the resource is already downloaded
     except LookupError:
         print(f"Downloading NLTK resource: {resource_name}")
-        nltk.download(resource_name)
+        nltk.download(resource_name, download_dir=nltk_data_dir)
 
 # Ensure required NLTK resources are available
 ensure_nltk_resource('punkt')
