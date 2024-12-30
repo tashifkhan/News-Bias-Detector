@@ -99,7 +99,7 @@ const CategoriesPage = () => {
 	);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const loader = useRef(null);
-	const categories = ["all", "politics", "technology", "economy", "health"];
+	const categories = ["politics", "technology", "economy", "health"];
 
 	const getBiasColor = (bias?: string) => {
 		switch (bias) {
