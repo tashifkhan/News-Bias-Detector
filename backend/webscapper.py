@@ -10,20 +10,20 @@ import json
 # Ensure necessary resources are downloaded
 
 def ensure_nltk_resource(resource_name):
-    nltk_data_dir = os.path.join(os.getcwd(), 'nltk_data')
+    nltk_data_dir = '/opt/render/nltk_data'
     os.makedirs(nltk_data_dir, exist_ok=True)
     try:
         find(resource_name)  # Check if the resource is already downloaded
     except LookupError:
         print(f"Downloading NLTK resource: {resource_name}")
-        nltk.download(resource_name, download_dir=nltk_data_dir)
+        nltk.download(resource_name, download_dir=nltk_data_dir, quiet=True)
 
 # Ensure required NLTK resources are available
 ensure_nltk_resource('punkt')
 ensure_nltk_resource('stopwords')
 
 # Path to the cache folder
-CACHE_FOLDER = os.path.expanduser("~/.newspaper_scraper")
+CACHE_FOLDER = os.path.join(os.path.dirname(__file__), ".newspaper_scraper")
 
 def clear_cache():
     """
