@@ -64,7 +64,6 @@ const predictBias = async (article: {
 };
 
 const Home = () => {
-	const [activeTab, setActiveTab] = useState("trending");
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(true);
@@ -113,7 +112,12 @@ const Home = () => {
 				);
 
 				if (articlesWithBias.length > 0) {
-					setDisplayedArticles((prev) => [...prev, ...articlesWithBias]);
+					const filteredArticles = articlesWithBias.filter(
+						(article) =>
+							!article.link.includes("https://gadgetsnow.indiatimes.com/") &&
+							!article.link.includes("https://www.gadgets360.com/")
+					);
+					setDisplayedArticles((prev) => [...prev, ...filteredArticles]);
 					setPage((prev) => prev + 1);
 				}
 

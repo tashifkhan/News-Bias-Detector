@@ -8,6 +8,7 @@ from nltk.data import find
 import nltk
 from pymongo import MongoClient
 from bson.json_util import dumps
+from pymongo.errors import BulkWriteError
 import os
 import dotenv
 
@@ -40,52 +41,51 @@ def home():
 @app.route('/scaper', methods=['GET', 'POST'])
 def scrape():
     data = request.json
-    if data is None:
+    if not data:
         return jsonify({"error": "Invalid or empty JSON"}), 400
 
     websites = data.get('websites', [])
-    count = data.get('count', 50)  # Default to 50 if 'count' is not provided
+    count = data.get('count', 50)  # Default to 50
 
     if not websites:
         return jsonify({"error": "No websites provided"}), 400
 
+    # Scrape websites
     results = webscapper.scrape(websites, count)
+    valid_results = [r for r in results if r.get('title') and r.get('text')]
+
+    if not valid_results:
+        return jsonify({"message": "No valid results to insert"}), 200
 
     added_count = 0
     duplicate_count = 0
-    valid_results = [r for r in results if r['title'] and r['text']]
-    
-    try:
-        # Bulk insert with ordered=False for better performance
-        if valid_results:
-            result = collection.insert_many(
-                valid_results, 
-                ordered=False
-            )
-            added_count = len(result.inserted_ids)
-            duplicate_count = len(valid_results) - added_count
-    except Exception as e:
-        if 'duplicate key' in str(e):
-            # Count successful inserts if partial failure
-            added_count = len(getattr(e, 'details', {}).get('writeErrors', []))
-            duplicate_count = len(valid_results) - added_count
-        else:
-            return jsonify({"error": f"Unexpected error: {e}"}), 500
-    collection.delete_many({'title': ''})
-    collection.delete_many({'text': ''})
-    collection.delete_many({'text': 'Get App for Better Experience'})
-    collection.delete_many({'text': 'Log onto movie.ndtv.com for more celebrity pictures'})
-    collection.delete_many({'text': 'No description available.'})
-    collection.delete_many({
-        'title': {
-            '$regex': '(?i)(dell|hp|acer|lenovo)'
-        }
-    })
 
-    # Check total count and delete old entries if needed
+    try:
+        # Bulk insert and handle duplicates
+        result = collection.insert_many(valid_results, ordered=False)
+        added_count = len(result.inserted_ids)
+        duplicate_count = len(valid_results) - added_count
+    except BulkWriteError as bwe:
+        write_errors = bwe.details.get('writeErrors', [])
+        added_count = len(valid_results) - len(write_errors)
+        duplicate_count = len(write_errors)
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+
+    # Remove unwanted documents
+    unwanted_texts = [
+        "", "Get App for Better Experience",
+        "Log onto movie.ndtv.com for more celebrity pictures",
+        "No description available."
+    ]
+    collection.delete_many({'title': {'$exists': True, '$regex': '^(?i)(dell|hp|acer|lenovo)'}})
+    collection.delete_many({'text': {'$in': unwanted_texts}})
+    
+    # Maintain a size limit of 1500 documents
     total_count = collection.count_documents({})
     if total_count > 1500:
-        oldest_docs = collection.find().sort("published_date", 1).limit(1000)
+        excess_docs = total_count - 1500
+        oldest_docs = collection.find({}, {'_id': 1}).sort("published_date", 1).limit(excess_docs)
         doc_ids = [doc['_id'] for doc in oldest_docs]
         if doc_ids:
             collection.delete_many({'_id': {'$in': doc_ids}})
