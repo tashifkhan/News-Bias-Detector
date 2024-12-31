@@ -51,10 +51,27 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/')
 def home():
+    """
+    Handles the home route of the News Classifier API.
+    Returns:
+        Response: A JSON response containing a welcome message.
+    """
     return jsonify(message="Welcome to the News Classifier API")
 
 @app.route('/predict', methods=['POST'])
 def bias():
+    """
+    Handles POST requests to the /predict endpoint to predict the bias of a given text.
+
+    The function expects a JSON payload with 'title' and 'text' fields, combines them,
+    and passes the combined text to the prediction pipeline.
+
+    Returns:
+        JSON: A JSON response containing the predicted bias or an error message.
+
+    Raises:
+        Exception: If there is an error during prediction, returns a JSON response with the error message and a 500 status code.
+    """
     try:
         data = request.json
         pred = pd.DataFrame([data])
@@ -65,20 +82,67 @@ def bias():
     except Exception as e:
         return jsonify({"error": f"Failed to predict: {e}"}), 500
     
+@app.route('/get-scrape', methods=['GET', 'POST'])
+def get_scrape():
+    """
+        Handles the '/get-scrape' endpoint for scraping articles from provided websites.
+        This function accepts JSON data via GET or POST requests. The JSON data should contain:
+        - 'websites': A list of website URLs to scrape.
+        - 'count': (Optional) Maximum number of articles to fetch per website (default is 50).
 
-@app.route('/scaper', methods=['GET', 'POST'])
-def scrape():
+        The function validates the input data, performs web scraping using the `webscapper.scrape` method,
+        and filters out results that do not contain both 'title' and 'text'.
+
+        Returns:
+            JSON response:
+            - 400 status code with an error message if the input data is invalid or empty.
+            - 200 status code with a message if no valid results are found.
+            - 200 status code with a message and the valid results if scraping is successful.
+    """
     data = request.json
     if not data:
         return jsonify({"error": "Invalid or empty JSON"}), 400
 
     websites = data.get('websites', [])
-    count = data.get('count', 50)  # Default to 50
+    count = data.get('count', 50)
+
+    if not websites:
+        return jsonify({"error": "No websites provided"}), 400
+    
+    results = webscapper.scrape(websites, count)
+    valid_results = [r for r in results if r.get('title') and r.get('text')]
+
+    if not valid_results:
+        return jsonify({"message": "No valid results to insert"}), 200
+
+    return jsonify({"message": "Scraping completed!", "results": valid_results})
+
+
+
+@app.route('/scaper', methods=['GET', 'POST'])
+def scrape():
+    """
+    Scrapes articles from a list of websites and stores them in the database.
+    This function handles both GET and POST requests. It expects a JSON payload with
+    'websites' (a list of URLs to scrape) and 'count' (maximum number of articles to fetch per website).
+    It validates the input, performs the scraping, filters out invalid results, and inserts the valid
+    results into the database. It also handles duplicate entries and cleans up unwanted texts and
+    excess documents in the collection.
+
+    Returns:
+        Response: A JSON response containing the status of the scraping operation, including the number
+                of articles added and duplicates skipped.
+    """
+    data = request.json
+    if not data:
+        return jsonify({"error": "Invalid or empty JSON"}), 400
+
+    websites = data.get('websites', [])
+    count = data.get('count', 50)  
 
     if not websites:
         return jsonify({"error": "No websites provided"}), 400
 
-    # Scrape websites
     results = webscapper.scrape(websites, count)
     valid_results = [r for r in results if r.get('title') and r.get('text')]
 
@@ -89,7 +153,6 @@ def scrape():
     duplicate_count = 0
 
     try:
-        # Bulk insert and handle duplicates
         result = collection.insert_many(valid_results, ordered=False)
         added_count = len(result.inserted_ids)
         duplicate_count = len(valid_results) - added_count
@@ -100,7 +163,6 @@ def scrape():
     except Exception as e:
         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
-    # Remove unwanted documents
     unwanted_texts = [
         "", "Get App for Better Experience",
         "Log onto movie.ndtv.com for more celebrity pictures",
@@ -109,7 +171,6 @@ def scrape():
     collection.delete_many({'title': {'$exists': True, '$regex': '^(?i)(dell|hp|acer|lenovo)'}})
     collection.delete_many({'text': {'$in': unwanted_texts}})
     
-    # Maintain a size limit of 1500 documents
     total_count = collection.count_documents({})
     if total_count > 1500:
         excess_docs = total_count - 1500
@@ -126,9 +187,15 @@ def scrape():
 
 @app.route('/cache', methods=['GET', 'OPTIONS'])
 def cache():
+    """
+    Retrieves cached data from the database, sorted by published date in descending order.
+
+    Returns:
+        Response: A JSON response containing the cached data if available, 
+                or an error message if no cached data is found or if an exception occurs.
+    """
     try:
-        # Retrieve all documents from the MongoDB collection, sorted by published date
-        entire_data = list(collection.find().sort("published_date", -1))  # -1 for descending order
+        entire_data = list(collection.find().sort("published_date", -1)) 
         if not entire_data:
             return jsonify({"error": "No cached data found. Please scrape first."}), 404
         return jsonify(json.loads(dumps(entire_data)))
@@ -138,15 +205,30 @@ def cache():
 
 @app.route('/search', methods=['POST'])
 def search():
+    """
+    Handles the search functionality for articles based on a keyword.
+
+    This endpoint expects a JSON payload with a 'keyword' field. It searches the articles
+    collection for matches in the 'title' and 'text' fields using MongoDB's text search.
+    The results are sorted by their relevance score.
+
+    Args:
+        None
+
+    Returns:
+        Response: A JSON response containing the search results or an error message.
+        - 200: A list of articles matching the search keyword.
+        - 400: If no keyword is provided in the request.
+        - 404: If no articles are found matching the keyword.
+        - 500: If an error occurs during the search process.
+    """
     data = request.json
     keyword = data.get('keyword')
     if not keyword:
         return jsonify({"error": "No keyword provided"}), 400
     try:
-        # Ensure text index exists
         collection.create_index([('title', 'text'), ('text', 'text')])
 
-        # Perform text search
         results = collection.find(
             {"$text": {"$search": keyword}},
             {"score": {"$meta": "textScore"}}
@@ -161,14 +243,19 @@ def search():
     
 @app.route('/delete', methods=['DELETE'])
 def delete():
+    """
+    Deletes the oldest 1000 documents from the collection based on the published date.
+    This function retrieves the oldest 1000 documents from the MongoDB collection,
+    deletes them, and returns a JSON response indicating the number of documents deleted.
+    Returns:
+        Response: A JSON response containing a message with the number of deleted documents
+                or an error message if the deletion fails.
+    """
     try:
-        # Find the oldest 1000 documents sorted by published_date
         oldest_docs = collection.find().sort("published_date", 1).limit(1000)
         
-        # Get the _ids of documents to delete
         doc_ids = [doc['_id'] for doc in oldest_docs]
         
-        # Delete the documents
         if doc_ids:
             result = collection.delete_many({'_id': {'$in': doc_ids}})
             return jsonify({"message": f"Deleted {result.deleted_count} documents"})
