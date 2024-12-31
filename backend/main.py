@@ -2,7 +2,7 @@ import os
 import subprocess
 
 # Ensure NLTK resources are downloaded
-subprocess.run(["python", "download_nltk_resources.py"])
+subprocess.run(["python", "download_resources.py"])
 
 from flask import Flask, jsonify, request
 import pandas as pd
