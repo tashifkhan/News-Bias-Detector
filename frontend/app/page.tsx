@@ -299,7 +299,7 @@ const Home = () => {
 										</span>
 										{selectedArticle.publish_date && (
 											<span>
-												•{" "}
+												&bull;{" "}
 												{new Date(
 													selectedArticle.publish_date
 												).toLocaleDateString()}

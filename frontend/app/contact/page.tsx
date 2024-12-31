@@ -35,8 +35,8 @@ const ContactSection = () => {
 				<div className="text-center mb-12">
 					<h2 className="text-3xl font-bold text-blue-900 mb-4">Contact Us</h2>
 					<p className="text-gray-600 max-w-2xl mx-auto">
-						Have questions about our media bias detection platform? We're here
-						to help. Reach out to us for any inquiries or support needs.
+						Have questions about our media bias detection platform? We&apos;re
+						here to help. Reach out to us for any inquiries or support needs.
 					</p>
 				</div>
 
@@ -65,7 +65,7 @@ const ContactSection = () => {
 											<h3 className="font-semibold">Phone</h3>
 											<p className="text-gray-600">
 												+91 (120) 4567-xxxx{" "}
-												<span className="text-blue-300">~ mail only</span>
+												<span className="text-blue-300">{"~ mail only"}</span>
 											</p>
 										</div>
 									</div>
