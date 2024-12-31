@@ -71,7 +71,9 @@ pip install -r requirements.txt
 ## Usage
 
 **Live Link**
-[🔗](bias-detector.tashif.codes)
+[🔗 fontend](https://news-bias-detector.vercel.app)
+[🔗 backend](https://news-bias-detector.onrender.com/)
+
 for the Bias Detection Wensite
 
 **Launch Prototype Streamlit App**:
