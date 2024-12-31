@@ -42,7 +42,7 @@ export interface NewsArticle {
 	author: string[];
 	publish_date: string | null;
 	keywords: string[];
-	tags: any[];
+	tags: string[];
 	bias?: string;
 	thumbnail?: string;
 }

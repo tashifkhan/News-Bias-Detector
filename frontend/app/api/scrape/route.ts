@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server'
 import clientPromise from '@/libs/mongo'
 import { scrapeScrapy } from '@/hooks/hookNewsArticles'
 
+interface ScrapedArticle {
+    title: string;
+    text: string;
+    author: string[];
+    publish_date: string | null;
+    keywords: string[];
+    tags: string[];
+    link: string;
+    thumbnail?: string;
+}
+
+interface ScrapyResponse {
+    articles: ScrapedArticle[];
+}
+
 export async function POST() {
     try {
         const client = await clientPromise
@@ -11,7 +26,7 @@ export async function POST() {
         let addedCount = 0
         let duplicateCount = 0
 
-        const validResults = await scrapeScrapy() as unknown as { articles: any[] }
+        const validResults = await scrapeScrapy() as unknown as ScrapyResponse
 
         try {
             const result = await collection.insertMany(validResults.articles, { ordered: false })
@@ -29,13 +44,13 @@ export async function POST() {
 
         // Delete unwanted content
         const unwantedTexts = [
-            "", "Get App for Better Experience",
-            "Log onto movie.ndtv.com for more celebrity pictures",
-            "No description available."
+            "", `Get App for Better Experience`,
+            `Log onto movie.ndtv.com for more celebrity pictures`,
+            `No description available.`
         ]
 
         await collection.deleteMany({
-            title: { $regex: '^(dell|hp|acer|lenovo)', $options: 'i' }
+            title: { $regex: `^(dell|hp|acer|lenovo)`, $options: 'i' }
         })
 
         await collection.deleteMany({
