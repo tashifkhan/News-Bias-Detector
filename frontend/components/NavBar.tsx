@@ -45,7 +45,7 @@ const Navbar = () => {
 				body: JSON.stringify({ keyword: searchText }),
 			});
 
-			const results = await response.json();
+			await response.json();
 			window.location.href = `/search?keyword=${encodeURIComponent(
 				searchText
 			)}`;

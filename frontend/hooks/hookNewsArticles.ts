@@ -25,7 +25,7 @@ const getCachedData = async () => {
 
 const scrapeScrapy = async () => {
     const response = await axios.post(
-        backendUrl + "get-scrape/",
+        backendUrl + "get-scrape",
         payload,
         {
             headers: {

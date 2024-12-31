@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import clientPromise from '@/libs/mongo'
 import { scrapeScrapy } from '@/hooks/hookNewsArticles'
 
-export async function POST(request: Request) {
+export async function POST() {
     try {
         const client = await clientPromise
         const db = client.db("NewsBiasApp")
