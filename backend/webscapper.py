@@ -2,8 +2,6 @@ import os
 import shutil
 from nltk.data import find
 import nltk
-from newspaper import Article
-from datetime import datetime
 import newspaper
 import json
 

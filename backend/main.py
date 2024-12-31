@@ -1,3 +1,9 @@
+import os
+import subprocess
+
+# Ensure NLTK resources are downloaded
+subprocess.run(["python", "download_nltk_resources.py"])
+
 from flask import Flask, jsonify, request
 import pandas as pd
 from src.pipeline.predict_pipeline import PredictPipeline
@@ -9,7 +15,6 @@ import nltk
 from pymongo import MongoClient
 from bson.json_util import dumps
 from pymongo.errors import BulkWriteError
-import os
 import dotenv
 
 # Load environment variables
