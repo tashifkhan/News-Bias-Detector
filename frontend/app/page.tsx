@@ -35,7 +35,7 @@ const ArticleSkeleton = () => (
 	</Card>
 );
 
-export interface NewsArticle {
+export interface NewsArticles {
 	link: string;
 	title: string;
 	text: string;
@@ -67,8 +67,8 @@ const Home = () => {
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(true);
-	const [displayedArticles, setDisplayedArticles] = useState<NewsArticle[]>([]);
-	const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(
+	const [displayedArticles, setDisplayedArticles] = useState<NewsArticles[]>([]);
+	const [selectedArticle, setSelectedArticle] = useState<NewsArticles | null>(
 		null
 	);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,7 +99,7 @@ const Home = () => {
 
 				// Predict bias for each article
 				const articlesWithBias = await Promise.all(
-					articlesSlice.map(async (article: NewsArticle) => {
+					articlesSlice.map(async (article: NewsArticles) => {
 						const predictedBias = await predictBias({
 							title: article.title,
 							text: article.text,
@@ -158,7 +158,7 @@ const Home = () => {
 		loadMoreArticles();
 	}, []);
 
-	const handleArticleClick = (article: NewsArticle) => {
+	const handleArticleClick = (article: NewsArticles) => {
 		setSelectedArticle(article);
 		setIsDialogOpen(true);
 	};
@@ -191,7 +191,7 @@ const Home = () => {
 
 				{/* News Grid */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{displayedArticles.map((article: NewsArticle, index: number) => (
+					{displayedArticles.map((article: NewsArticles, index: number) => (
 						<Card
 							key={`${article.title}-${index}`}
 							className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
