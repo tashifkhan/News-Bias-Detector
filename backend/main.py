@@ -41,7 +41,7 @@ ensure_nltk_resource('wordnet')
 ensure_nltk_resource('stopwords')
 
 # MongoDB setup
-client = MongoClient(os.getenv('MONGO_DB_URI'))
+client = MongoClient(os.getenv('MONGO_DB_URI'), ssl=True, ssl_cert_reqs='CERT_NONE')
 db = client['NewsBiasApp']
 collection = db['NewsArtciles']
 
