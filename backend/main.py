@@ -16,7 +16,6 @@ from pymongo import MongoClient
 from bson.json_util import dumps
 from pymongo.errors import BulkWriteError
 import dotenv
-import ssl
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -42,11 +41,7 @@ ensure_nltk_resource('wordnet')
 ensure_nltk_resource('stopwords')
 
 # MongoDB setup
-client = MongoClient(
-    os.getenv('MONGO_DB_URI'),
-    ssl=True,
-    ssl_cert_reqs=ssl.CERT_NONE
-)
+client = MongoClient(os.getenv('MONGO_DB_URI'))
 db = client['NewsBiasApp']
 collection = db['NewsArtciles']
 
