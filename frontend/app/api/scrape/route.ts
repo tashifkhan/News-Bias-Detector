@@ -1,26 +1,26 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '@/libs/mongo'
-import NewsArticle from '@/libs/articleModal'
-import { NewsArticles } from '@/app/page'
+import clientPromise from '@/libs/mongo'
 import { scrapeScrapy } from '@/hooks/hookNewsArticles'
 
 export async function POST(request: Request) {
     try {
-        await dbConnect()
+        const client = await clientPromise
+        const db = client.db("NewsBiasApp")
+        const collection = db.collection("NewsArtciles")
 
         let addedCount = 0
         let duplicateCount = 0
 
-        const validResults = await scrapeScrapy() as unknown as { articles: NewsArticles[] }
-        
+        const validResults = await scrapeScrapy() as unknown as { articles: any[] }
+
         try {
             // Insert many documents
-            const result = await NewsArticle.insertMany(validResults.articles, { ordered: false })
-            addedCount = result.length
+            const result = await collection.insertMany(validResults.articles, { ordered: false })
+            addedCount = result.insertedCount
             duplicateCount = validResults.articles.length - addedCount
         } catch (error) {
-            if (error && typeof error === 'object' && 'code' in error && error.code === 11000) { // Duplicate key error
-                const writeErrors = (error as { writeErrors?: { length: number }[] }).writeErrors || []
+            if (error && typeof error === 'object' && 'writeErrors' in error) {
+                const writeErrors = (error as { writeErrors?: any[] }).writeErrors || []
                 addedCount = validResults.articles.length - writeErrors.length
                 duplicateCount = writeErrors.length
             } else {
@@ -35,24 +35,26 @@ export async function POST(request: Request) {
             "No description available."
         ]
 
-        await NewsArticle.deleteMany({
+        await collection.deleteMany({
             title: { $regex: '^(dell|hp|acer|lenovo)', $options: 'i' }
         })
-        await NewsArticle.deleteMany({
+
+        await collection.deleteMany({
             text: { $in: unwantedTexts }
         })
 
         // Maintain maximum of 1500 documents
-        const totalCount = await NewsArticle.countDocuments()
+        const totalCount = await collection.countDocuments()
         if (totalCount > 1500) {
             const excessDocs = totalCount - 1500
-            const oldestDocs = await NewsArticle.find({}, '_id')
+            const oldestDocs = await collection.find({}, { projection: { _id: 1 } })
                 .sort({ published_date: 1 })
                 .limit(excessDocs)
-            
+                .toArray()
+
             const docIds = oldestDocs.map(doc => doc._id)
             if (docIds.length > 0) {
-                await NewsArticle.deleteMany({ _id: { $in: docIds } })
+                await collection.deleteMany({ _id: { $in: docIds } })
             }
         }
 
@@ -61,7 +63,6 @@ export async function POST(request: Request) {
             added_articles: addedCount,
             duplicates_skipped: duplicateCount
         })
-
     } catch (error) {
         return NextResponse.json(
             { error: `Unexpected error: ${error}` },

@@ -9,7 +9,8 @@ const websites = [
     "https://www.republicworld.com/",
 ]
 
-const backendUrl = "http://127.0.0.1:5000/"
+const backendUrl = "https://news-bias-detector.onrender.com/"
+const nextBackend = "/api/"
 const payload = {
     websites: websites,
     count: 60000,
@@ -29,7 +30,7 @@ const getNewsArticles = async () => {
 
 const getCachedData = async () => {
     const response = await axios.get(
-        "http://127.0.0.1:5000/cache",
+        `${nextBackend}cache`,
     );
     return response.data;
 };

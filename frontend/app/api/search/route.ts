@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '@/libs/mongo'
-import NewsArticle from '@/libs/articleModal'
+import clientPromise from '@/libs/mongo'
+import { Collection } from 'mongodb'
 
 export async function POST(request: Request) {
   try {
@@ -13,18 +13,20 @@ export async function POST(request: Request) {
       )
     }
 
-    await dbConnect()
+    const client = await clientPromise
+    const collection: Collection = client.db("NewsBiasApp").collection("NewsArtciles")
     
-    const articles = await NewsArticle
-      .find({
-        $or: [
-          { tags: { $regex: keyword, $options: 'i' } },
-          { title: { $regex: keyword, $options: 'i' } },
-          { $text: { $search: keyword } }
-        ]
-      },
-      { score: { $meta: "textScore" } })
+    // Create text index
+    await collection.createIndex({ title: "text", text: "text" })
+    
+    // Perform text search
+    const articles = await collection
+      .find(
+        { $text: { $search: keyword } },
+        { projection: { score: { $meta: "textScore" } } }
+      )
       .sort({ score: { $meta: "textScore" } })
+      .toArray()
     
     if (!articles.length) {
       return NextResponse.json(
