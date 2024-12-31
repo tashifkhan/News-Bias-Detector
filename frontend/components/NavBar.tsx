@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Menu, X, Search, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { getNewsArticles } from "@/hooks/hookNewsArticles";
+import { nextBackend, payload } from "@/hooks/hookNewsArticles";
 import icon from "@/app/icon.png";
+import axios from "axios";
 
 const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,8 +24,11 @@ const Navbar = () => {
 	const handleDatabaseRefresh = async () => {
 		try {
 			setIsRefreshing(true);
-			await getNewsArticles();
-			// toast.success("Database refresh successful");
+			axios.post(`${nextBackend}/scrape`, payload, {
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
 		} catch (error) {
 			console.error("Error refreshing database:", error);
 		} finally {
@@ -33,7 +37,7 @@ const Navbar = () => {
 	};
 	const handleSearch = async (searchText: string) => {
 		try {
-			const response = await fetch("http://127.0.0.1:5000/search", {
+			const response = await fetch(`${nextBackend}/search`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -91,7 +95,7 @@ const Navbar = () => {
 			<button
 				onClick={async () => {
 					await handleDatabaseRefresh();
-					window.location.reload();
+					// window.location.reload();
 				}}
 				disabled={isRefreshing}
 				className={`flex items-center px-4 py-2 rounded-md bg-blue-900 text-white hover:bg-blue-600 transition-colors duration-200 ${

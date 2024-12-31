@@ -16,18 +16,6 @@ const payload = {
     count: 60000,
 }
 
-const getNewsArticles = async () => {    
-    const response = await axios.post(
-        backendUrl + "scaper",
-        payload,
-        {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
-    );
-}
-
 const getCachedData = async () => {
     const response = await axios.get(
         `${nextBackend}cache`,
@@ -37,7 +25,7 @@ const getCachedData = async () => {
 
 const scrapeScrapy = async () => {
     const response = await axios.post(
-        backendUrl + "get-scrape",
+        backendUrl + "get-scrape/",
         payload,
         {
             headers: {
@@ -48,4 +36,4 @@ const scrapeScrapy = async () => {
     return response.data.results;
 }
 
-export { getNewsArticles, getCachedData, scrapeScrapy, backendUrl, payload, websites };
+export { getCachedData, scrapeScrapy, backendUrl, nextBackend, payload, websites };

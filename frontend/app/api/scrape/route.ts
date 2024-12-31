@@ -14,7 +14,6 @@ export async function POST(request: Request) {
         const validResults = await scrapeScrapy() as unknown as { articles: any[] }
 
         try {
-            // Insert many documents
             const result = await collection.insertMany(validResults.articles, { ordered: false })
             addedCount = result.insertedCount
             duplicateCount = validResults.articles.length - addedCount

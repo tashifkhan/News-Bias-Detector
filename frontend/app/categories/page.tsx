@@ -8,11 +8,10 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import axios from "axios";
-import { getCachedData } from "@/hooks/hookNewsArticles";
+import { backendUrl, getCachedData } from "@/hooks/hookNewsArticles";
 import Link from "next/link";
 
 const ITEMS_PER_PAGE = 9;
-const LOADING_DELAY = 550;
 
 const CATEGORY_TERMS = {
 	politics: [
@@ -135,7 +134,7 @@ const CategoriesPage = () => {
 	const predictBias = async (article: Pick<NewsArticle, "title" | "text">) => {
 		try {
 			const { data } = await axios.post(
-				"http://127.0.0.1:5000/predict",
+				`${backendUrl}/predict`,
 				article
 			);
 			return data.bias[0] === 0 ? "left" : "right";
