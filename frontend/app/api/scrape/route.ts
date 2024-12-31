@@ -17,6 +17,13 @@ interface ScrapyResponse {
     articles: ScrapedArticle[];
 }
 
+interface MongoWriteError {
+    code: number;
+    index: number;
+    errmsg: string;
+    op: Record<string, unknown>;
+}
+
 export async function POST() {
     try {
         const client = await clientPromise
@@ -34,7 +41,7 @@ export async function POST() {
             duplicateCount = validResults.articles.length - addedCount
         } catch (error) {
             if (error && typeof error === 'object' && 'writeErrors' in error) {
-                const writeErrors = (error as { writeErrors?: any[] }).writeErrors || []
+                const writeErrors = (error as { writeErrors?: MongoWriteError[] }).writeErrors || []
                 addedCount = validResults.articles.length - writeErrors.length
                 duplicateCount = writeErrors.length
             } else {
