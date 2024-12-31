@@ -119,7 +119,7 @@ const SearchResultsPage: React.FC = () => {
 						<ChevronLeft size={24} />
 					</button>
 					<h1 className="text-2xl font-bold">
-						Search Results for "{searchKeyword}"
+						Search Results for &quot;{searchKeyword}&quot;
 					</h1>
 				</div>
 
