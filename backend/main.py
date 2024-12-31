@@ -41,7 +41,8 @@ ensure_nltk_resource('wordnet')
 ensure_nltk_resource('stopwords')
 
 # MongoDB setup
-client = MongoClient(os.getenv('MONGO_DB_URI'))
+mongodb_url = str(os.getenv('MONGO_DB_URI'))+"&ssl_cert_reqs=CERT_NONE"
+client = MongoClient(mongodb_url)
 db = client['NewsBiasApp']
 collection = db['NewsArtciles']
 
@@ -51,6 +52,19 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 @app.route('/')
 def home():
     return jsonify(message="Welcome to the News Classifier API")
+
+@app.route('/predict', methods=['POST'])
+def bias():
+    try:
+        data = request.json
+        pred = pd.DataFrame([data])
+        pred['text'] = pred['title'] + pred['text']
+        predict_pipeline = PredictPipeline()
+        result = predict_pipeline.predict(pred[['text']])
+        return jsonify({"bias": result.tolist()})
+    except Exception as e:
+        return jsonify({"error": f"Failed to predict: {e}"}), 500
+    
 
 @app.route('/scaper', methods=['GET', 'POST'])
 def scrape():
@@ -121,17 +135,6 @@ def cache():
     except Exception as e:
         return jsonify({"error": f"Failed to retrieve cached data: {e}"}), 500
 
-@app.route('/predict', methods=['POST'])
-def bias():
-    try:
-        data = request.json
-        pred = pd.DataFrame([data])
-        pred['text'] = pred['title'] + pred['text']
-        predict_pipeline = PredictPipeline()
-        result = predict_pipeline.predict(pred[['text']])
-        return jsonify({"bias": result.tolist()})
-    except Exception as e:
-        return jsonify({"error": f"Failed to predict: {e}"}), 500
 
 @app.route('/search', methods=['POST'])
 def search():
