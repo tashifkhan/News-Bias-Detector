@@ -4,13 +4,8 @@ import Link from "next/link";
 import { Menu, X, Search, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import {
-	getNewsArticles,
-	nextBackend,
-	payload,
-} from "@/hooks/hookNewsArticles";
+import { getNewsArticles, nextBackend } from "@/hooks/hookNewsArticles";
 import icon from "@/app/icon.png";
-import axios from "axios";
 
 const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
