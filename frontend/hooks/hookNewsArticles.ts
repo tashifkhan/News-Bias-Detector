@@ -23,6 +23,19 @@ const getCachedData = async () => {
     return response.data;
 };
 
+const getNewsArticles = async () => {    
+    const response = await axios.post(
+        backendUrl + "scaper",
+        payload,
+        {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+}
+
+
 const scrapeScrapy = async () => {
     const response = await axios.post(
         backendUrl + "get-scrape",
@@ -36,4 +49,4 @@ const scrapeScrapy = async () => {
     return response.data.results;
 }
 
-export { getCachedData, scrapeScrapy, backendUrl, nextBackend, payload, websites };
+export { getNewsArticles, getCachedData, scrapeScrapy, backendUrl, nextBackend, payload, websites };

@@ -4,7 +4,11 @@ import Link from "next/link";
 import { Menu, X, Search, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { nextBackend, payload } from "@/hooks/hookNewsArticles";
+import {
+	getNewsArticles,
+	nextBackend,
+	payload,
+} from "@/hooks/hookNewsArticles";
 import icon from "@/app/icon.png";
 import axios from "axios";
 
@@ -24,11 +28,8 @@ const Navbar = () => {
 	const handleDatabaseRefresh = async () => {
 		try {
 			setIsRefreshing(true);
-			axios.post(`${nextBackend}/scrape`, payload, {
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
+			await getNewsArticles();
+			// toast.success("Database refresh successful");
 		} catch (error) {
 			console.error("Error refreshing database:", error);
 		} finally {
@@ -95,7 +96,7 @@ const Navbar = () => {
 			<button
 				onClick={async () => {
 					await handleDatabaseRefresh();
-					// window.location.reload();
+					window.location.reload();
 				}}
 				disabled={isRefreshing}
 				className={`flex items-center px-4 py-2 rounded-md bg-blue-900 text-white hover:bg-blue-600 transition-colors duration-200 ${
