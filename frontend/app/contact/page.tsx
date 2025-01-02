@@ -35,8 +35,8 @@ const ContactSection = () => {
 				<div className="text-center mb-12">
 					<h2 className="text-3xl font-bold text-blue-900 mb-4">Contact Us</h2>
 					<p className="text-gray-600 max-w-2xl mx-auto">
-						Have questions about our media bias detection platform? We're here
-						to help. Reach out to us for any inquiries or support needs.
+						Have questions about our media bias detection platform? We&apos;re
+						here to help. Reach out to us for any inquiries or support needs.
 					</p>
 				</div>
 
@@ -55,7 +55,7 @@ const ContactSection = () => {
 										<Mail className="w-5 h-5 text-blue-600 mt-1" />
 										<div>
 											<h3 className="font-semibold">Email</h3>
-											<p className="text-gray-600">hehe_the_new_gg@gmail.com</p>
+											<p className="text-gray-600">Check the footer</p>
 										</div>
 									</div>
 
@@ -63,7 +63,10 @@ const ContactSection = () => {
 										<Phone className="w-5 h-5 text-blue-600 mt-1" />
 										<div>
 											<h3 className="font-semibold">Phone</h3>
-											<p className="text-gray-600">+91 (120) 4567-6900</p>
+											<p className="text-gray-600">
+												+91 (120) 4567-xxxx{" "}
+												<span className="text-blue-300">{"~ mail only"}</span>
+											</p>
 										</div>
 									</div>
 
@@ -167,7 +170,7 @@ const ContactSection = () => {
 										className="w-full bg-blue-800 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
 										onClick={(e) => {
 											e.preventDefault();
-											const mailtoLink = `mailto:hehe_the_new_gg@gmail.com?subject=${encodeURIComponent(
+											const mailtoLink = `mailto:developer@tashif.codes?subject=${encodeURIComponent(
 												formData.subject
 											)}&body=${encodeURIComponent(
 												`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`

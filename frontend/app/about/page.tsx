@@ -10,9 +10,9 @@ const AboutUsPage = () => {
 					<h2 className="text-3xl font-bold text-blue-900 mb-4">Who We Are</h2>
 					<p className="text-gray-600 max-w-2xl mx-auto">
 						At the core of democracy lies the power of an informed public. Yet,
-						in today's media landscape, the line between objective reporting and
-						biased narratives has blurred, creating an urgent need for tools
-						that help uncover and understand media bias.
+						in today&apos;s media landscape, the line between objective
+						reporting and biased narratives has blurred, creating an urgent need
+						for tools that help uncover and understand media bias.
 					</p>
 				</div>
 			</div>
@@ -118,7 +118,7 @@ const AboutUsPage = () => {
 				</Card>
 
 				{/* Call to Action */}
-				<Card className="bg-blue-50 shadow-lg">
+				<Card className="bg-blue-50 shadow-lg mb-20">
 					<CardContent className="p-6">
 						<h2 className="text-2xl font-bold mb-4 text-blue-900">
 							Join Us in Making a Difference

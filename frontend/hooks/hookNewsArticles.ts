@@ -9,11 +9,19 @@ const websites = [
     "https://www.republicworld.com/",
 ]
 
-const backendUrl = "http://127.0.0.1:5000/"
+const backendUrl = "https://news-bias-detector.onrender.com/"
+const nextBackend = "/api/"
 const payload = {
     websites: websites,
     count: 60000,
 }
+
+const getCachedData = async () => {
+    const response = await axios.get(
+        `${nextBackend}cache`,
+    );
+    return response.data;
+};
 
 const getNewsArticles = async () => {    
     const response = await axios.post(
@@ -27,11 +35,18 @@ const getNewsArticles = async () => {
     );
 }
 
-const getCachedData = async () => {
-    const response = await axios.get(
-        "http://127.0.0.1:5000/cache",
-    );
-    return response.data;
-};
 
-export { getNewsArticles, getCachedData, backendUrl, payload, websites };
+const scrapeScrapy = async () => {
+    const response = await axios.post(
+        backendUrl + "get-scrape",
+        payload,
+        {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    )
+    return response.data.results;
+}
+
+export { getNewsArticles, getCachedData, scrapeScrapy, backendUrl, nextBackend, payload, websites };

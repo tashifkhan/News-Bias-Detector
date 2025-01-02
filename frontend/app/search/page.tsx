@@ -10,13 +10,14 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import axios from "axios";
+import { backendUrl, nextBackend } from "@/hooks/hookNewsArticles";
 
 const predictBias = async (article: {
 	title: string;
 	text: string;
 }): Promise<string> => {
 	try {
-		const { data } = await axios.post("http://127.0.0.1:5000/predict", {
+		const { data } = await axios.post(`${backendUrl}/predict`, {
 			title: article.title,
 			text: article.text,
 		});
@@ -62,7 +63,7 @@ const SearchResultsPage: React.FC = () => {
 			setSearchKeyword(keyword);
 
 			try {
-				const response = await fetch("http://127.0.0.1:5000/search", {
+				const response = await fetch(`${nextBackend}/search`, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
@@ -118,7 +119,7 @@ const SearchResultsPage: React.FC = () => {
 						<ChevronLeft size={24} />
 					</button>
 					<h1 className="text-2xl font-bold">
-						Search Results for "{searchKeyword}"
+						Search Results for &quot;{searchKeyword}&quot;
 					</h1>
 				</div>
 

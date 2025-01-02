@@ -3,15 +3,14 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Search, RefreshCw } from "lucide-react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { getNewsArticles } from "@/hooks/hookNewsArticles";
+import { usePathname } from "next/navigation";
+import { getNewsArticles, nextBackend } from "@/hooks/hookNewsArticles";
 import icon from "@/app/icon.png";
 
 const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const pathname = usePathname();
-	const router = useRouter();
 
 	const navigationItems = [
 		{ name: "Home", href: "/" },
@@ -34,7 +33,7 @@ const Navbar = () => {
 	};
 	const handleSearch = async (searchText: string) => {
 		try {
-			const response = await fetch("http://127.0.0.1:5000/search", {
+			const response = await fetch(`${nextBackend}/search`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -42,7 +41,7 @@ const Navbar = () => {
 				body: JSON.stringify({ keyword: searchText }),
 			});
 
-			const results = await response.json();
+			await response.json();
 			window.location.href = `/search?keyword=${encodeURIComponent(
 				searchText
 			)}`;

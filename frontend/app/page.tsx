@@ -7,8 +7,9 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { getCachedData } from "@/hooks/hookNewsArticles";
+import { backendUrl, getCachedData } from "@/hooks/hookNewsArticles";
 import axios from "axios";
+import Link from "next/link";
 
 const ITEMS_PER_PAGE = 9;
 const LOADING_DELAY = 550;
@@ -41,7 +42,7 @@ export interface NewsArticle {
 	author: string[];
 	publish_date: string | null;
 	keywords: string[];
-	tags: any[];
+	tags: string[];
 	bias?: string;
 	thumbnail?: string;
 }
@@ -51,7 +52,7 @@ const predictBias = async (article: {
 	text: string;
 }): Promise<string> => {
 	try {
-		const { data } = await axios.post("http://127.0.0.1:5000/predict", {
+		const { data } = await axios.post(`${backendUrl}/predict`, {
 			title: article.title,
 			text: article.text,
 		});
@@ -63,7 +64,6 @@ const predictBias = async (article: {
 };
 
 const Home = () => {
-	const [activeTab, setActiveTab] = useState("trending");
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(true);
@@ -84,6 +84,8 @@ const Home = () => {
 				return "bg-gray-100 text-gray-800";
 		}
 	};
+
+	// infinite scroll
 
 	const loadMoreArticles = useCallback(async () => {
 		setLoading(true);
@@ -150,6 +152,8 @@ const Home = () => {
 		};
 	}, [loadMoreArticles, hasMore, loading]);
 
+	// end scroll
+
 	useEffect(() => {
 		loadMoreArticles();
 	}, []);
@@ -163,7 +167,7 @@ const Home = () => {
 		<div className="min-h-screen bg-gray-50">
 			<main className="max-w-7xl mx-auto px-4 py-8">
 				{/* Tabs */}
-				<div className="flex space-x-4 mb-8">
+				{/* <div className="flex space-x-4 mb-8">
 					{["trending", "latest", "analyzed"].map((tab) => (
 						<button
 							key={tab}
@@ -183,7 +187,7 @@ const Home = () => {
 							{tab.charAt(0).toUpperCase() + tab.slice(1)}
 						</button>
 					))}
-				</div>
+				</div> */}
 
 				{/* News Grid */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -198,7 +202,7 @@ const Home = () => {
 									<img
 										src={article.thumbnail}
 										alt={article.title}
-										className="w-full h-full object-cover"
+										className="w-full h-full object-cover rounded-t-xl"
 									/>
 								</div>
 							)}
@@ -295,7 +299,7 @@ const Home = () => {
 										</span>
 										{selectedArticle.publish_date && (
 											<span>
-												•{" "}
+												&bull;{" "}
 												{new Date(
 													selectedArticle.publish_date
 												).toLocaleDateString()}
@@ -307,23 +311,49 @@ const Home = () => {
 											{selectedArticle.text}
 										</p>
 									</div>
-									{selectedArticle.keywords?.length > 0 && (
-										<div className="pt-4 border-t">
-											<h3 className="text-sm font-semibold mb-2">Keywords</h3>
-											<div className="flex flex-wrap gap-2">
-												{selectedArticle.keywords.map(
-													(keyword: string, index: number) => (
-														<span
-															key={index}
-															className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
-														>
-															{keyword}
-														</span>
-													)
-												)}
+									<div>
+										{selectedArticle.keywords?.length > 0 && (
+											<div className="pt-4 border-t">
+												<h3 className="text-sm font-semibold mb-2">Keywords</h3>
+												<div className="flex flex-wrap gap-2">
+													{selectedArticle.keywords.map(
+														(keyword: string, index: number) => (
+															<span
+																key={index}
+																className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+															>
+																{keyword}
+															</span>
+														)
+													)}
+												</div>
 											</div>
+										)}
+										<div className="pt-4">
+											<Link
+												href={selectedArticle.link}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg 
+												hover:from-blue-700 hover:to-blue-900 transform hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg"
+											>
+												Read Article from Source
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M14 5l7 7m0 0l-7 7m7-7H3"
+													/>
+												</svg>
+											</Link>
 										</div>
-									)}
+									</div>
 								</div>
 							</>
 						)}
