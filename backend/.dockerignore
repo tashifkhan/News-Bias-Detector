@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+logs/
+artifacts/raw.csv
+artifacts/test.csv
+artifacts/train.csv
+nltk_data/
+legacy_json_implementation/
+notebook/
+prototype/
+.env
+example.env
+.git
+.gitignore 

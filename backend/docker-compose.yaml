@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: ./
+    
+    container_name: news-bias-backend
+    ports:
+      - "5001:5000"
+    
+    env_file:
+      - ./.env 
+
+    networks:
+      - nginxproxyman_network:
+          external: true
+          name: nginxproxyman
