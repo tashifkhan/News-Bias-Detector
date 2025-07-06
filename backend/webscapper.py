@@ -157,8 +157,6 @@ def main():
     from pymongo import MongoClient
     from pymongo.errors import BulkWriteError
 
-    # clear_cache()
-
     dotenv.load_dotenv()
     mongodb_url = str(os.getenv("MONGO_DB_URI")) + "&ssl_cert_reqs=CERT_NONE"
 
@@ -175,27 +173,58 @@ def main():
         "https://www.republicworld.com/",
     ]
 
-    results = scrape(websites, count=50)
+    results = scrape(websites, count=5000)
+    valid_results = [r for r in results if r.get("title") and r.get("text")]
 
-    if not results:
-        print("No articles scraped.")
+    if not valid_results:
+        print("No valid results to insert")
         return
 
+    added_count = 0
+    duplicate_count = 0
+
     try:
-        result = collection.insert_many(results, ordered=False)
-        print(f"Inserted {len(result.inserted_ids)} articles into MongoDB.")
+        result = collection.insert_many(valid_results, ordered=False)
+        added_count = len(result.inserted_ids)
+        duplicate_count = len(valid_results) - added_count
 
     except BulkWriteError as bwe:
         write_errors = bwe.details.get("writeErrors", [])
-        inserted_count = len(results) - len(write_errors)
-        print(
-            f"Inserted {inserted_count} articles. {len(write_errors)} duplicates or errors skipped."
-        )
+        added_count = len(valid_results) - len(write_errors)
+        duplicate_count = len(write_errors)
 
     except Exception as e:
-        print(
-            f"Failed to insert articles into MongoDB. Error: {e}",
+        print(f"Unexpected error: {str(e)}")
+        return
+
+    unwanted_texts = [
+        "",
+        "Get App for Better Experience",
+        "Log onto movie.ndtv.com for more celebrity pictures",
+        "No description available.",
+    ]
+
+    collection.delete_many(
+        {"title": {"$exists": True, "$regex": "^(?i)(dell|hp|acer|lenovo)"}}
+    )
+    collection.delete_many({"text": {"$in": unwanted_texts}})
+
+    total_count = collection.count_documents({})
+
+    if total_count > 1500:
+        excess_docs = total_count - 1500
+        oldest_docs = (
+            collection.find({}, {"_id": 1}).sort("published_date", 1).limit(excess_docs)
         )
+
+        doc_ids = [doc["_id"] for doc in oldest_docs]
+
+        if doc_ids:
+            collection.delete_many({"_id": {"$in": doc_ids}})
+
+    print(
+        f"Scraping completed! Added articles: {added_count}, Duplicates skipped: {duplicate_count}"
+    )
 
 
 if __name__ == "__main__":
