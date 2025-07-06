@@ -213,3 +213,4 @@ next-env.d.ts
 /frontend/.next
 
 .backend
+nltk_data/
