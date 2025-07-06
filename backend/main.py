@@ -165,7 +165,21 @@ def scrape():
     """
     data = request.json
     if not data:
-        return jsonify({"error": "Invalid or empty JSON"}), 400
+        return (
+            jsonify(
+                {
+                    "error": "Invalid or empty JSON",
+                }
+            ),
+            400,
+        )
+
+    return jsonify(
+        {
+            "sucess": True,
+            "message": "on cron job this function has been depricated in this version",
+        }
+    )
 
     websites = data.get("websites", [])
     count = data.get("count", 50)

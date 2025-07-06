@@ -214,3 +214,4 @@ next-env.d.ts
 
 .backend
 nltk_data/
+logs/

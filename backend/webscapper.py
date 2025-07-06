@@ -5,28 +5,38 @@ import nltk
 import newspaper
 import json
 
-# Ensure necessary resources are downloaded
 
 def ensure_nltk_resource(resource_name):
-    nltk_data_dir = os.path.join(os.getcwd(), 'nltk_data')
+    nltk_data_dir = os.path.join(
+        os.path.dirname(
+            os.path.abspath(
+                __file__,
+            )
+        ),
+        "nltk_data",
+    )
     os.makedirs(nltk_data_dir, exist_ok=True)
-    
-    # Add the NLTK data directory to the search path
+
     if nltk_data_dir not in nltk.data.path:
         nltk.data.path.append(nltk_data_dir)
-        
+
     try:
-        find(resource_name)  # Check if the resource is already downloaded
+        find(resource_name)
+
     except LookupError:
         print(f"Downloading NLTK resource: {resource_name}")
         nltk.download(resource_name, download_dir=nltk_data_dir)
 
-# Ensure required NLTK resources are available
-ensure_nltk_resource('punkt')
-ensure_nltk_resource('stopwords')
+
+ensure_nltk_resource("punkt")
+ensure_nltk_resource("stopwords")
 
 # Path to the cache folder
-CACHE_FOLDER = os.path.join(os.path.dirname(__file__), ".newspaper_scraper")
+CACHE_FOLDER = os.path.join(
+    os.path.dirname(__file__),
+    ".newspaper_scraper",
+)
+
 
 def clear_cache():
     """
@@ -36,10 +46,13 @@ def clear_cache():
         try:
             shutil.rmtree(CACHE_FOLDER)  # Delete the cache folder
             print("Cache cleared successfully.")
+
         except Exception as e:
             print(f"Failed to clear cache: {e}")
+
     else:
         print("No cache to clear.")
+
 
 def scrape(websites: list, count: int = 50) -> list:
     """
@@ -58,7 +71,11 @@ def scrape(websites: list, count: int = 50) -> list:
     for website in websites:
         temp = count
         try:
-            site = newspaper.build(website, language='en', memorize=False)  # Disable cache
+            site = newspaper.build(
+                website,
+                language="en",
+                memorize=False,
+            )
             print(f"Links from {website} = {len(site.articles)}")
 
             for article in site.articles:
@@ -69,16 +86,22 @@ def scrape(websites: list, count: int = 50) -> list:
                     article.parse()
                     article.nlp()
 
-                    articles_data.append({
-                        "link": article.url,
-                        "title": article.title,
-                        "text": article.text,
-                        "author": article.authors,
-                        "publish_date": article.publish_date.strftime('%Y-%m-%d') if article.publish_date else None,
-                        "keywords": article.keywords,
-                        "tags": list(article.tags),
-                        "thumbnail": article.top_image  # Get the top image (thumbnail)
-                    })
+                    articles_data.append(
+                        {
+                            "link": article.url,
+                            "title": article.title,
+                            "text": article.text,
+                            "author": article.authors,
+                            "publish_date": (
+                                article.publish_date.strftime("%Y-%m-%d")
+                                if article.publish_date
+                                else None
+                            ),
+                            "keywords": article.keywords,
+                            "tags": list(article.tags),
+                            "thumbnail": article.top_image,
+                        }
+                    )
                     temp -= 1
 
                 except Exception as e:
@@ -103,10 +126,15 @@ def save_to_json(data, output_file):
         output_file (str): The filename to save the data into.
     """
     try:
-        # Load existing data if the file exists
+
         if os.path.exists(output_file):
-            with open(output_file, 'r', encoding='utf-8') as json_file:
+            with open(
+                output_file,
+                "r",
+                encoding="utf-8",
+            ) as json_file:
                 existing_data = json.load(json_file)
+
         else:
             existing_data = []
 
@@ -114,17 +142,29 @@ def save_to_json(data, output_file):
         combined_data = data + existing_data
 
         # Save updated data back to the file
-        with open(output_file, 'w', encoding='utf-8') as json_file:
+        with open(output_file, "w", encoding="utf-8") as json_file:
             json.dump(combined_data, json_file, ensure_ascii=False, indent=4)
 
         print(f"Data saved to {output_file}")
+
     except Exception as e:
         print(f"Failed to save data to JSON. Error: {e}")
 
 
 def main():
-    # Clear cache before scraping
-    clear_cache()
+    import os
+    import dotenv
+    from pymongo import MongoClient
+    from pymongo.errors import BulkWriteError
+
+    # clear_cache()
+
+    dotenv.load_dotenv()
+    mongodb_url = str(os.getenv("MONGO_DB_URI")) + "&ssl_cert_reqs=CERT_NONE"
+
+    client = MongoClient(mongodb_url)
+    db = client["NewsBiasApp"]
+    collection = db["NewsArtciles"]
 
     websites = [
         "https://www.ndtv.com/",
@@ -136,8 +176,26 @@ def main():
     ]
 
     results = scrape(websites, count=50)
-    output_file = "news_articles.json"
-    save_to_json(results, output_file)
+
+    if not results:
+        print("No articles scraped.")
+        return
+
+    try:
+        result = collection.insert_many(results, ordered=False)
+        print(f"Inserted {len(result.inserted_ids)} articles into MongoDB.")
+
+    except BulkWriteError as bwe:
+        write_errors = bwe.details.get("writeErrors", [])
+        inserted_count = len(results) - len(write_errors)
+        print(
+            f"Inserted {inserted_count} articles. {len(write_errors)} duplicates or errors skipped."
+        )
+
+    except Exception as e:
+        print(
+            f"Failed to insert articles into MongoDB. Error: {e}",
+        )
 
 
 if __name__ == "__main__":
