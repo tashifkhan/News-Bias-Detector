@@ -19,6 +19,11 @@ COPY . .
 
 RUN python download_resources.py
 
+# make sure any "uv-cache" or reloader/cache dir under /tmp is
+# writable by everyone (sticky bit)
+RUN mkdir -p /tmp/uv-cache \
+    && chmod 1777 /tmp/uv-cache
+
 EXPOSE 5000
 
 ENV FLASK_APP=main.py

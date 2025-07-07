@@ -7,6 +7,10 @@ services:
     ports:
       - "5001:5000"
     
+    # ensure /tmp/uv-cache is a brand-new in-memory dir
+    tmpfs:
+      - /tmp/uv-cache:mode=1777
+
     env_file:
       - ./.env 
 
