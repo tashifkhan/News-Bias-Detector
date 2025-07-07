@@ -60,7 +60,14 @@ db = client["NewsBiasApp"]
 collection = db["NewsArtciles"]
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": "*",
+        },
+    },
+)
 
 
 @app.route("/")
@@ -93,12 +100,23 @@ def bias():
         pred["text"] = pred["title"] + pred["text"]
         predict_pipeline = PredictPipeline()
 
-        result = predict_pipeline.predict(pred[["text"]])
+        result = predict_pipeline.predict(pred["text"].iloc[0])
 
-        return jsonify({"bias": result.tolist()})
+        return jsonify(
+            {
+                "bias": result.tolist(),
+            }
+        )
 
     except Exception as e:
-        return jsonify({"error": f"Failed to predict: {e}"}), 500
+        return (
+            jsonify(
+                {
+                    "error": f"Failed to predict: {e}",
+                }
+            ),
+            500,
+        )
 
 
 @app.route("/get-scrape", methods=["GET", "POST"])
@@ -293,10 +311,23 @@ def search():
         - 500: If an error occurs during the search process.
     """
     data = request.json
+    if not data:
+        return (
+            jsonify(
+                {"error": "Invalid or empty JSON"},
+            ),
+            400,
+        )
+
     keyword = data.get("keyword")
 
     if not keyword:
-        return jsonify({"error": "No keyword provided"}), 400
+        return (
+            jsonify(
+                {"error": "No keyword provided"},
+            ),
+            400,
+        )
 
     try:
         collection.create_index([("title", "text"), ("text", "text")])
@@ -316,8 +347,16 @@ def search():
                 404,
             )
         return jsonify(json.loads(dumps(articles)))
+
     except Exception as e:
-        return jsonify({"error": f"Search failed: {e}"}), 500
+        return (
+            jsonify(
+                {
+                    "error": f"Search failed: {e}",
+                }
+            ),
+            500,
+        )
 
 
 @app.route("/delete", methods=["DELETE"])
