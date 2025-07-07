@@ -11,6 +11,8 @@ services:
       - ./.env 
 
     networks:
-      - nginxproxyman_network:
-          external: true
-          name: nginxproxyman
+      - nginxproxyman
+
+networks:
+  nginxproxyman:
+    external: true
