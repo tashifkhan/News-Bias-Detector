@@ -9,7 +9,7 @@ const websites = [
     "https://www.republicworld.com/",
 ]
 
-const backendUrl = "https://news-bias-detector.onrender.com/"
+const backendUrl = process.env.BACKEND_URL || "localhost:5000"
 const nextBackend = "/api/"
 const payload = {
     websites: websites,
