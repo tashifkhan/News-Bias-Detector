@@ -12,7 +12,3 @@ services:
 
     networks:
       - nginxproxyman
-
-networks:
-  nginxproxyman:
-    external: true
