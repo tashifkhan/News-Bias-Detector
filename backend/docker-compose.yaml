@@ -11,4 +11,8 @@ services:
       - ./.env 
 
     networks:
-      - nginxproxyman
+      - nginx-proxy-manager_nginxproxyman
+
+networks:
+  nginx-proxy-manager_nginxproxyman:
+    external: true
