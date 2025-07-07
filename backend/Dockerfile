@@ -26,6 +26,8 @@ RUN mkdir -p /tmp/uv-cache \
 
 EXPOSE 5000
 
-ENV FLASK_APP=main.py
+ENV FLASK_APP=main.py \
+    FLASK_RUN_HOST=0.0.0.0 \
+    FLASK_RUN_PORT=5000
 
-CMD ["python", "main.py"] 
+CMD ["flask", "run"] 
