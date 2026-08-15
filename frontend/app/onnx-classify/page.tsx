@@ -104,7 +104,9 @@ async function classify(text: string): Promise<string> {
 	const results = await m.session.run({ [inputName]: tensor });
 
 	const label = results[m.session.outputNames[0]].data[0];
-	return label === 0 ? "left" : "right";
+	// the label output is an int64 tensor -> BigInt64Array; Number() it so
+	// the strict `=== 0` check works (BigInt(0) === 0 is false otherwise).
+	return Number(label) === 0 ? "left" : "right";
 }
 
 function stage(s: string) {
