@@ -7,8 +7,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import axios from "axios";
-import { backendUrl, getCachedData } from "@/hooks/hookNewsArticles";
+import { getCachedData } from "@/hooks/hookNewsArticles";
+import {
+	predictBias as clientPredictBias,
+	preloadOnnxModel,
+} from "@/components/client-ml/onnxClassifier";
 import Link from "next/link";
 
 const ITEMS_PER_PAGE = 9;
@@ -132,16 +135,7 @@ const CategoriesPage = () => {
 	);
 
 	const predictBias = async (article: Pick<NewsArticle, "title" | "text">) => {
-		try {
-			const { data } = await axios.post(
-				`${backendUrl}/predict`,
-				article
-			);
-			return data.bias[0] === 0 ? "left" : "right";
-		} catch (error) {
-			console.error("Error predicting bias:", error);
-			return "unknown";
-		}
+		return clientPredictBias(article);
 	};
 
 	const loadArticles = useCallback(async () => {
@@ -212,6 +206,10 @@ const CategoriesPage = () => {
 			loadArticles();
 		}
 	}, [articles.length, hasMore, loadArticles]);
+
+	useEffect(() => {
+		preloadOnnxModel();
+	}, []);
 
 	return (
 		<div className="min-h-screen bg-gray-50">

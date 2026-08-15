@@ -9,24 +9,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import axios from "axios";
-import { backendUrl, nextBackend } from "@/hooks/hookNewsArticles";
-
-const predictBias = async (article: {
-	title: string;
-	text: string;
-}): Promise<string> => {
-	try {
-		const { data } = await axios.post(`${backendUrl}/predict`, {
-			title: article.title,
-			text: article.text,
-		});
-		return data.bias[0] === 0 ? "left" : "right";
-	} catch (error) {
-		console.error("Error predicting bias:", error);
-		return "unknown";
-	}
-};
+import { nextBackend } from "@/hooks/hookNewsArticles";
+import { predictBias, preloadOnnxModel } from "@/components/client-ml/onnxClassifier";
 
 const getBiasColor = (bias: string): string => {
 	switch (bias) {
@@ -48,6 +32,10 @@ const SearchResultsPage: React.FC = () => {
 	const [selectedResult, setSelectedResult] = useState<NewsArticle | null>(
 		null
 	);
+
+	useEffect(() => {
+		preloadOnnxModel();
+	}, []);
 
 	useEffect(() => {
 		const fetchSearchResults = async () => {

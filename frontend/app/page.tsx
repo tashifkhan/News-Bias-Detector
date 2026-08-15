@@ -7,8 +7,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { backendUrl, getCachedData } from "@/hooks/hookNewsArticles";
-import axios from "axios";
+import { getCachedData } from "@/hooks/hookNewsArticles";
+import { predictBias, preloadOnnxModel } from "@/components/client-ml/onnxClassifier";
 import Link from "next/link";
 
 const ITEMS_PER_PAGE = 9;
@@ -46,22 +46,6 @@ export interface NewsArticle {
 	bias?: string;
 	thumbnail?: string;
 }
-
-const predictBias = async (article: {
-	title: string;
-	text: string;
-}): Promise<string> => {
-	try {
-		const { data } = await axios.post(`${backendUrl}/predict`, {
-			title: article.title,
-			text: article.text,
-		});
-		return data.bias[0] === 0 ? "left" : "right";
-	} catch (error) {
-		console.error("Error predicting bias:", error);
-		return "unknown";
-	}
-};
 
 const Home = () => {
 	const [page, setPage] = useState(1);
@@ -156,6 +140,12 @@ const Home = () => {
 
 	useEffect(() => {
 		loadMoreArticles();
+	}, []);
+
+	// preload the ONNX runtime + model in the background so the first
+	// article's bias resolves fast instead of blocking on a cold load.
+	useEffect(() => {
+		preloadOnnxModel();
 	}, []);
 
 	const handleArticleClick = (article: NewsArticle) => {

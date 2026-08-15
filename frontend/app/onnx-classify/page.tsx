@@ -1,31 +1,9 @@
 "use client";
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import * as ort from "onnxruntime-web";
 import ClassifyShell from "@/components/client-ml/ClassifyShell";
 import StageProgress, { type StageDef } from "@/components/client-ml/StageProgress";
 import { Brain, Zap, Cpu, CheckCircle2, Gauge } from "lucide-react";
-
-// Serve the WASM runtime from our own static /ort-wasm/ path.
-ort.env.wasm.wasmPaths = "/ort-wasm/";
-
-type Meta = {
-	vocab: string[];
-	idf: number[];
-	norm: string;
-	lemma: Record<string, string>;
-	n_features: number;
-	accuracy: number;
-	stopwords: string[];
-};
-
-type LoadedModel = {
-	meta: Meta;
-	session: ort.InferenceSession;
-	stopwordSet: Set<string>;
-	vocabIndex: Map<string, number>;
-};
-
-let modelPromise: Promise<LoadedModel> | null = null;
+import { loadOnnxModel, classifyText } from "@/components/client-ml/onnxClassifier";
 
 const STAGES: StageDef[] = [
 	{ key: "meta", label: "Downloading model_meta.json", detail: "vocab · idf · lemma table · ~4 MB" },
@@ -34,86 +12,19 @@ const STAGES: StageDef[] = [
 	{ key: "session", label: "Compiling inference session", detail: "warm the graph once, cache it" },
 ];
 
-async function loadModel(): Promise<LoadedModel> {
-	if (modelPromise) return modelPromise;
-
-	modelPromise = (async () => {
-		stage("meta");
-		const metaRes = await fetch("/models/model_meta.json");
-		if (!metaRes.ok) throw new Error("failed to fetch model_meta.json");
-		const meta: Meta = await metaRes.json();
-
-		stage("onnx");
-		const onnxRes = await fetch("/models/model.onnx");
-		if (!onnxRes.ok) throw new Error("failed to fetch model.onnx");
-
-		stage("wasm");
-		stage("session");
-		const session = await ort.InferenceSession.create(
-			await onnxRes.arrayBuffer(),
-			{ executionProviders: ["wasm"] }
-		);
-		return {
-			meta,
-			session,
-			stopwordSet: new Set(meta.stopwords),
-			vocabIndex: new Map(meta.vocab.map((w, i) => [w, i])),
-		};
-	})();
-
-	return modelPromise;
-}
-
-function buildFeatures(text: string, m: LoadedModel): Float32Array {
-	const { meta, stopwordSet, vocabIndex } = m;
-	const vec = new Float32Array(meta.n_features);
-
-	const cleaned = text
-		.toLowerCase()
-		.replace(/[^a-zA-Z0-9\s-]/g, "")
-		.split(/\s+/)
-		.filter((w) => w.length > 0 && !stopwordSet.has(w))
-		.map((w) => meta.lemma[w] ?? w);
-
-	const tokenRe = /[a-zA-Z0-9-]{2,}/g;
-	for (const w of cleaned) {
-		for (const tok of w.match(tokenRe) || []) {
-			const idx = vocabIndex.get(tok);
-			if (idx !== undefined) vec[idx] += 1;
-		}
-	}
-
-	for (let i = 0; i < meta.n_features; i++) vec[i] *= meta.idf[i];
-
-	if (meta.norm === "l2") {
-		let sum = 0;
-		for (let i = 0; i < meta.n_features; i++) sum += vec[i] * vec[i];
-		const n = Math.sqrt(sum);
-		if (n > 0) for (let i = 0; i < meta.n_features; i++) vec[i] /= n;
-	}
-
-	return vec;
-}
-
-async function classify(text: string): Promise<string> {
-	const m = await loadModel();
-	const features = buildFeatures(text, m);
-
-	const inputName = m.session.inputNames[0];
-	const tensor = new ort.Tensor("float32", features, [1, m.meta.n_features]);
-	const results = await m.session.run({ [inputName]: tensor });
-
-	const label = results[m.session.outputNames[0]].data[0];
-	// the label output is an int64 tensor -> BigInt64Array; Number() it so
-	// the strict `=== 0` check works (BigInt(0) === 0 is false otherwise).
-	return Number(label) === 0 ? "left" : "right";
-}
-
+let stageSink: ((s: string) => void) | null = null;
 function stage(s: string) {
 	stageSink?.(s);
 }
 
-let stageSink: ((s: string) => void) | null = null;
+async function loadModel() {
+	stage("meta");
+	const m = await loadOnnxModel();
+	stage("onnx");
+	stage("wasm");
+	stage("session");
+	return m;
+}
 
 type LoadStatus =
 	| { state: "idle" }
@@ -167,7 +78,7 @@ export default function OnnxClassifyPage() {
 		setResult(null);
 		try {
 			const t0 = performance.now();
-			const label = await classify(text.trim());
+			const label = await classifyText(text.trim());
 			const ms = performance.now() - t0;
 			if (mounted.current) setResult({ label, ms });
 		} catch (e: unknown) {
