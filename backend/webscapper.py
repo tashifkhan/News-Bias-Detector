@@ -82,6 +82,13 @@ def scrape(websites: list, count: int = 50) -> list:
                 try:
                     if temp == 0:
                         break
+                    # newspaper3k's default UA/timeout gets blocked or times out
+                    # on modern news sites; use a browser-ish UA + longer timeout.
+                    article.config.browser_user_agent = (
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                    )
+                    article.config.request_timeout = 20
                     article.download()
                     article.parse()
                     article.nlp()
