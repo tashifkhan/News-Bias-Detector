@@ -15,10 +15,16 @@ const Navbar = () => {
 	const navigationItems = [
 		{ name: "Home", href: "/" },
 		{ name: "Categories", href: "/categories" },
+		{ name: "Client ML", href: "/client-ml" },
 		{ name: "Donations", href: "/donations" },
 		{ name: "About Us", href: "/about" },
 		{ name: "Contant Us", href: "/contact" },
 	];
+
+	const isActive = (href: string) =>
+		pathname === href ||
+		(href === "/client-ml" &&
+			["/client-ml", "/pyodide-classify", "/onnx-classify"].includes(pathname));
 
 	const handleDatabaseRefresh = async () => {
 		try {
@@ -131,7 +137,7 @@ const Navbar = () => {
 									key={item.name}
 									href={item.href}
 									className={`px-3 py-2 rounded-md transition-colors duration-200 ${
-										pathname === item.href
+										isActive(item.href)
 											? "bg-blue-50 text-blue-900"
 											: "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
 									}`}
@@ -169,7 +175,7 @@ const Navbar = () => {
 								key={item.name}
 								href={item.href}
 								className={`block px-3 py-2 rounded-md transition-colors duration-200 ${
-									pathname === item.href
+									isActive(item.href)
 										? "bg-blue-50 text-blue-600"
 										: "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
 								}`}
