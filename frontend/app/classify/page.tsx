@@ -76,7 +76,14 @@ async function loadModel() {
 
 	stage("registering browser_preprocess module");
 	await pyodide.runPythonAsync(`
-import sys
+import sys, os
+from pathlib import Path
+
+os.makedirs("/models", exist_ok=True)
+if not Path("/models/browser_preprocess.py").exists():
+    Path("/models/browser_preprocess.py").write_text(
+        (await _fetch_bytes("/models/browser_preprocess.py")).decode("utf-8")
+    )
 sys.path.insert(0, "/models")
 import browser_preprocess
 `);
