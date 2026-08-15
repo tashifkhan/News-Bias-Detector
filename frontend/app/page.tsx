@@ -8,7 +8,11 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { getFeed } from "@/hooks/hookNewsArticles";
-import { predictBias, preloadOnnxModel } from "@/components/client-ml/onnxClassifier";
+import {
+	predictBias,
+	preloadOnnxModel,
+	loadOnnxModel,
+} from "@/components/client-ml/onnxClassifier";
 import Link from "next/link";
 
 
@@ -75,6 +79,14 @@ const Home = () => {
 		try {
 			const feed = await getFeed(page);
 			const articlesSlice = feed.articles;
+
+			// Make sure the ONNX runtime is ready before classifying, so the
+			// first articles don't race the WASM warm-up and come back "unknown".
+			try {
+				await loadOnnxModel();
+			} catch {
+				// model unavailable — fall through, articles show as unknown
+			}
 
 			// Classify each article client-side (ONNX in the browser)
 			const articlesWithBias = await Promise.all(

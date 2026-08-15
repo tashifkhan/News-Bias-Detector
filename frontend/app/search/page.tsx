@@ -10,7 +10,11 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { nextBackend } from "@/hooks/hookNewsArticles";
-import { predictBias, preloadOnnxModel } from "@/components/client-ml/onnxClassifier";
+import {
+	predictBias,
+	preloadOnnxModel,
+	loadOnnxModel,
+} from "@/components/client-ml/onnxClassifier";
 
 const getBiasColor = (bias: string): string => {
 	switch (bias) {
@@ -64,6 +68,13 @@ const SearchResultsPage: React.FC = () => {
 				}
 
 				const data = await response.json();
+
+				// Wait for the ONNX runtime before classifying results.
+				try {
+					await loadOnnxModel();
+				} catch {
+					// model unavailable — fall through
+				}
 
 				// Predict bias for each article
 				const articlesWithBias = await Promise.all(

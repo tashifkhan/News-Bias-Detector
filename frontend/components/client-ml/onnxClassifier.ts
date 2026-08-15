@@ -27,24 +27,31 @@ export async function loadOnnxModel(): Promise<LoadedModel> {
 	if (modelPromise) return modelPromise;
 
 	modelPromise = (async () => {
-		const [metaRes, onnxRes] = await Promise.all([
-			fetch("/models/model_meta.json"),
-			fetch("/models/model.onnx"),
-		]);
-		if (!metaRes.ok) throw new Error("failed to fetch model_meta.json");
-		if (!onnxRes.ok) throw new Error("failed to fetch model.onnx");
+		try {
+			const [metaRes, onnxRes] = await Promise.all([
+				fetch("/models/model_meta.json"),
+				fetch("/models/model.onnx"),
+			]);
+			if (!metaRes.ok) throw new Error("failed to fetch model_meta.json");
+			if (!onnxRes.ok) throw new Error("failed to fetch model.onnx");
 
-		const meta: Meta = await metaRes.json();
-		const session = await ort.InferenceSession.create(
-			await onnxRes.arrayBuffer(),
-			{ executionProviders: ["wasm"] }
-		);
-		return {
-			meta,
-			session,
-			stopwordSet: new Set(meta.stopwords),
-			vocabIndex: new Map(meta.vocab.map((w, i) => [w, i])),
-		};
+			const meta: Meta = await metaRes.json();
+			const session = await ort.InferenceSession.create(
+				await onnxRes.arrayBuffer(),
+				{ executionProviders: ["wasm"] }
+			);
+			return {
+				meta,
+				session,
+				stopwordSet: new Set(meta.stopwords),
+				vocabIndex: new Map(meta.vocab.map((w, i) => [w, i])),
+			};
+		} catch (err) {
+			// Reset so a transient failure (e.g. WASM still warm on first load)
+			// doesn't poison the cached promise for every later call.
+			modelPromise = null;
+			throw err;
+		}
 	})();
 
 	return modelPromise;
