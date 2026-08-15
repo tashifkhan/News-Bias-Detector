@@ -16,6 +16,14 @@ const getCachedData = async () => {
     return response.json();
 };
 
+/** Paginated, trimmed feed for the home page (bias computed client-side). */
+const getFeed = async (page = 1, limit = 9) => {
+    const response = await fetch(
+        `${nextBackend}feed?page=${page}&limit=${limit}`,
+    );
+    return response.json();
+};
+
 /**
  * No Python/Flask backend anymore — the scraper runs as a scheduled
  * GitHub Actions cron (see .github/workflows/scrape_news.yml). Calling this
@@ -29,4 +37,4 @@ const getNewsArticles = async () => {
     return response.json();
 };
 
-export { getNewsArticles, getCachedData, nextBackend, websites }
+export { getNewsArticles, getCachedData, getFeed, nextBackend, websites }

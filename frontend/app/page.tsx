@@ -7,12 +7,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { getCachedData } from "@/hooks/hookNewsArticles";
+import { getFeed } from "@/hooks/hookNewsArticles";
 import { predictBias, preloadOnnxModel } from "@/components/client-ml/onnxClassifier";
 import Link from "next/link";
 
-const ITEMS_PER_PAGE = 9;
-const LOADING_DELAY = 550;
 
 const ArticleSkeleton = () => (
 	<Card className="animate-pulse">
@@ -74,41 +72,37 @@ const Home = () => {
 	const loadMoreArticles = useCallback(async () => {
 		setLoading(true);
 
-		setTimeout(async () => {
-			try {
-				const startIndex = (page - 1) * ITEMS_PER_PAGE;
-				const endIndex = startIndex + ITEMS_PER_PAGE;
-				const loadedData = await getCachedData();
-				const articlesSlice = loadedData.slice(startIndex, endIndex);
+		try {
+			const feed = await getFeed(page);
+			const articlesSlice = feed.articles;
 
-				// Predict bias for each article
-				const articlesWithBias = await Promise.all(
-					articlesSlice.map(async (article: NewsArticle) => {
-						const predictedBias = await predictBias({
-							title: article.title,
-							text: article.text,
-						});
-						return {
-							...article,
-							bias: predictedBias,
-						};
-					})
-				);
+			// Classify each article client-side (ONNX in the browser)
+			const articlesWithBias = await Promise.all(
+				articlesSlice.map(async (article: NewsArticle) => {
+					const predictedBias = await predictBias({
+						title: article.title,
+						text: article.text,
+					});
+					return {
+						...article,
+						bias: predictedBias,
+					};
+				})
+			);
 
-				if (articlesWithBias.length > 0) {
-					setDisplayedArticles((prev) => [...prev, ...articlesWithBias]);
-					setPage((prev) => prev + 1);
-				}
-
-				if (endIndex >= loadedData.length) {
-					setHasMore(false);
-				}
-			} catch (error) {
-				console.error("Error loading articles:", error);
-			} finally {
-				setLoading(false);
+			if (articlesWithBias.length > 0) {
+				setDisplayedArticles((prev) => [...prev, ...articlesWithBias]);
+				setPage((prev) => prev + 1);
 			}
-		}, LOADING_DELAY);
+
+			if (!feed.hasMore) {
+				setHasMore(false);
+			}
+		} catch (error) {
+			console.error("Error loading articles:", error);
+		} finally {
+			setLoading(false);
+		}
 	}, [page]);
 
 	useEffect(() => {
