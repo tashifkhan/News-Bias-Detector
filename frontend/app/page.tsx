@@ -8,11 +8,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { getFeed } from "@/hooks/hookNewsArticles";
-import {
-	predictBias,
-	preloadOnnxModel,
-	loadOnnxModel,
-} from "@/components/client-ml/onnxClassifier";
+import { predictBias, preloadOnnxModel } from "@/components/client-ml/onnxClassifier";
 import Link from "next/link";
 
 
@@ -66,6 +62,8 @@ const Home = () => {
 				return "bg-blue-100 text-blue-800";
 			case "right":
 				return "bg-red-100 text-red-800";
+			case "pending":
+				return "bg-gray-100 text-gray-500";
 			default:
 				return "bg-gray-100 text-gray-800";
 		}
@@ -80,32 +78,52 @@ const Home = () => {
 			const feed = await getFeed(page);
 			const articlesSlice = feed.articles;
 
-			// Make sure the ONNX runtime is ready before classifying, so the
-			// first articles don't race the WASM warm-up and come back "unknown".
-			try {
-				await loadOnnxModel();
-			} catch {
-				// model unavailable — fall through, articles show as unknown
-			}
+			// Render cards immediately with a "pending" bias, then classify in the
+			// background so the feed never blocks on the WASM model warm-up.
+			const articlesPending = articlesSlice.map((article: NewsArticle) => ({
+				...article,
+				bias: "pending",
+			}));
 
-			// Classify each article client-side (ONNX in the browser)
-			const articlesWithBias = await Promise.all(
-				articlesSlice.map(async (article: NewsArticle) => {
-					const predictedBias = await predictBias({
-						title: article.title,
-						text: article.text,
-					});
-					return {
-						...article,
-						bias: predictedBias,
-					};
-				})
-			);
-
-			if (articlesWithBias.length > 0) {
-				setDisplayedArticles((prev) => [...prev, ...articlesWithBias]);
+			if (articlesPending.length > 0) {
+				setDisplayedArticles((prev) => [...prev, ...articlesPending]);
 				setPage((prev) => prev + 1);
 			}
+
+			// Classify each article client-side (ONNX in the browser).
+			// Retry a few times: the model loads async and the first attempt may
+			// race the WASM compile.
+			const classifyWithRetry = async (article: NewsArticle) => {
+				for (let attempt = 0; attempt < 4; attempt++) {
+					try {
+						const bias = await predictBias({
+							title: article.title,
+							text: article.text,
+						});
+						if (bias !== "unknown") return bias;
+						await new Promise((r) => setTimeout(r, 1200));
+					} catch {
+						await new Promise((r) => setTimeout(r, 1200));
+					}
+				}
+				return "unknown";
+			};
+
+			const articlesWithBias = await Promise.all(
+				articlesPending.map(async (article: NewsArticle) => ({
+					...article,
+					bias: await classifyWithRetry(article),
+				}))
+			);
+
+			setDisplayedArticles((prev) =>
+				prev.map((a) => {
+					const updated = articlesWithBias.find(
+						(u) => u.link === a.link && u.bias !== "pending"
+					);
+					return updated ? updated : a;
+				})
+			);
 
 			if (!feed.hasMore) {
 				setHasMore(false);
@@ -214,7 +232,10 @@ const Home = () => {
 											article.bias || "unknown"
 										)}`}
 									>
-										{(article.bias || "unknown").toUpperCase()}
+										{(article.bias === "pending"
+											? "ANALYZING…"
+											: (article.bias || "unknown").toUpperCase()
+										)}
 									</span>
 								</div>
 							</CardHeader>
@@ -284,7 +305,10 @@ const Home = () => {
 												selectedArticle.bias || "unknown"
 											)}`}
 										>
-											{(selectedArticle.bias || "unknown").toUpperCase()}
+											{(selectedArticle.bias === "pending"
+												? "ANALYZING…"
+												: (selectedArticle.bias || "unknown").toUpperCase()
+											)}
 										</span>
 									</div>
 								</DialogHeader>
